@@ -1,0 +1,9 @@
+antiorm==1.2.1
+certifi==2018.8.24
+chardet==3.0.4
+db==0.1.1
+idna==2.7
+requests==2.19.1
+urllib3==1.23
+utils==0.9.0
+virtualenv==16.0.0
