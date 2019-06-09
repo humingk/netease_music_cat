@@ -4,16 +4,12 @@
 import config
 import requests
 import json
-import decrypt
 
 """
-排行榜模块
-    使用方法：
-        get_ranklists_id(user_id)
-        
-        传入user_id
-        返回用户首页的“最后一周”和“所有时间”排行榜歌单的歌曲列表
-
+传入user_id,返回用户首页的“最后一周”和“所有时间”排行榜共200首歌单的song列表
+待优化:
+    分析core.js文件
+    通过crypto中的AES解决param和encSecKey两个加密参数，参见decrypt模块
 """
 
 
@@ -23,31 +19,56 @@ class ranklist:
         # 歌单列表
         self.ranklists_id = []
 
-    # 获取歌单歌曲列表
+        base_url = config.base_url
+        host = config.host
+        user_agent = config.user_agent
+        accept = config.accept
+
+        cookie_ranklist = config.cookie_ranklist
+
+        self.headers = {
+            "Referer": base_url,
+            "Host": host,
+            "User-Agent": user_agent,
+            "Accept": accept,
+            "Cookie": cookie_ranklist
+        }
+
     def get_ranklists_id(self, user_id):
-        json_text=json.loads(decrypt.get_json(url=config.url_rank, param_type="songs", total=True, offset=0, proxies=""))
+        params_ranklist = config.params_ranklist
+        encSecKey_ranklist = config.encSecKey_ranklist
+        self.user_data = {
+            "uid": user_id,
+            "type": "0",
+            "params": params_ranklist,
+            "encSecKey": encSecKey_ranklist
+        }
+        # url = "https://music.163.com/#/user/songs/?id=" + user_id + "rank"
+        url = 'http://music.163.com/weapi/v1/play/record?csrf_token='
+        self.user_data['uid'] = user_id
+        self.user_data['type'] = '0'
+        response = requests.post(url, headers=self.headers, data=self.user_data)
+        response = response.content
+        json_text = json.loads(response.decode("utf-8"))
 
         json_all_data = json_text["allData"]
         json_week_data = json_text["weekData"]
 
-        i = 0
-        while i < config.rank_all_max and i < len(json_all_data):
-            self.ranklists_id.append({
-                "song_id": json_all_data[i]["song"]["id"],
-                "song_name": json_all_data[i]["song"]["name"]
-            })
-            i += 1
-        j = 0
-        while j < config.rank_week_max and j < len(json_week_data):
-            self.ranklists_id.append({
-                "song_id": json_week_data[j]["song"]["id"],
-                "song_name": json_week_data[j]["song"]["name"]
-            })
-            j += 1
+        for i in range(len(json_all_data)):
+            self.dict_save((json_all_data[i]["song"]["id"]), json_all_data[i]["song"]["name"])
+        for i in range(len(json_week_data)):
+            self.dict_save((json_week_data[i]["song"]["id"]), json_week_data[i]["song"]["name"])
 
         return self.ranklists_id
 
+    def dict_save(self, song_id, song_name):
+        self.ranklists_id.append({
+            "song_id": song_id,
+            "song_name": song_name
+        })
+
 
 if __name__ == "__main__":
+    hl = ranklist()
     user_id = "55494140"
-    print(ranklist().get_ranklists_id(user_id))
+    print(hl.get_ranklists_id(user_id))
