@@ -7,8 +7,8 @@ import multiprocessing
 import config
 import decrypt
 import pymysql
-import playlist
-import ranklist
+import playlist_songs
+import user_ranklist_songs
 import play_lists
 import warnings
 import sqlite3
@@ -38,8 +38,8 @@ class comment:
         # 评论总数
         self.comment_sum = 0
 
-        self.playlist = playlist.playlist()
-        self.ranklist = ranklist.ranklist()
+        self.playlist = playlist_songs.playlist_songs()
+        self.ranklist = user_ranklist_songs.user_ranklist_songs()
         self.play_lists = play_lists.play_lists()
 
     # 将13位的时间转化为10位
@@ -227,16 +227,16 @@ if __name__ == "__main__":
     # 用户首页听歌排行榜所有歌
     print("正在爬取【所有时间】排行榜...")
     print("正在爬取【最近一周】排行榜...")
-    rank_songs = com.ranklist.get_ranklists_id(user_id)
+    rank_songs = com.ranklist.get_ranklist_songs(user_id)
 
     # 用户首页所有歌单
     print("正在爬取用户的歌单...")
-    playlists_id = com.play_lists.get_lists_id(user_id)
+    playlists_id = com.play_lists.get_user_playlists(user_id)
 
     # 用户首页所有歌单的歌
     playlists_songs = []
     for i in range(len(playlists_id)):
-        playlist_songs = com.playlist.get_playlist_songs_id(playlists_id[i])
+        playlist_songs = com.playlist.get_playlist_song_ids(playlists_id[i])
         playlists_songs.extend(playlist_songs)
 
     # 整合所有的歌
