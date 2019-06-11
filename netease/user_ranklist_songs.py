@@ -65,8 +65,8 @@ class user_ranklist_songs:
             "song_id": data[rank_song]["song"]["id"],
             "song_name": data[rank_song]["song"]["name"],
             "song_source_type": song_source_type,
-            "rank_song_score": data[rank_song]["score"],
-            "rank_type": rank_type
+            "song_source_rank_type": rank_type,
+            "rank_song_score": data[rank_song]["score"]
         })
 
 

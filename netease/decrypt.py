@@ -61,7 +61,7 @@ class decrypt:
         encrypt_text = str(base64.b64encode(encrypt_text))[2:-1]
         return encrypt_text
 
-    def get_json(self, user_id, url, param_type, total, offset, proxies):
+    def get_json(self, user_id=0, url="", param_type="", total="", offset=0, proxies=""):
         """
         post提交当前url的Form Data数据项
 

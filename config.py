@@ -22,6 +22,12 @@ database_user_name = "root"
 database_user_pwd = "1233"
 
 # 用户排行榜 ----------------------------
+# 排行榜类型
+week_rank = 0
+all_rank = 1
+
+# 默认排行榜类型
+rank_type = all_rank
 
 # 排行榜单中"最近一周"的最大歌曲选取数
 week_rank_max = 100
@@ -32,12 +38,12 @@ all_rank_max = 100
 # 标准歌曲 ------------------------------
 
 # 歌曲来源
-normal_song_source=0
-rank_song_source=1
-playlist_song_source=2
+normal_song_source = 0
+rank_song_source = 1
+playlist_song_source = 2
 
 # 标准歌曲默认类型
-song_source_type=normal_song_source
+song_source_type = normal_song_source
 
 # 标准歌单 ------------------------------
 
@@ -168,14 +174,17 @@ def get_first_param(user_id, param_type, total, offset):
     :param offset: 偏移量，默认0
     :return: 请求表单
     """
-    if param_type == "comments":
-        print("{rid:\"\", offset:" + str(offset) + ", total:\"" + str(total) + "\", limit:" + str(
-            page_limit) + ", csrf_token:\"\"}")
-        return "{rid:\"\", offset:" + str(offset) + ", total:\"" + str(total) + "\", limit:" + str(
-            page_limit) + ", csrf_token:\"\"}"
-    elif param_type == "songs":
-        return "{uid:\"" + str(user_id) + "\",type:\"-1\",limit:\"1000\",offset:" + str(offset) + ",total:\"" + str(
-            total) + "\",csrf_token:\"\"}"
+    # if param_type == "comments":
+    #     print("{rid:\"\", offset:" + str(offset) + ", total:\"" + str(total) + "\", limit:" + str(
+    #         page_limit) + ", csrf_token:\"\"}")
+    #     return "{rid:\"\", offset:" + str(offset) + ", total:\"" + str(total) + "\", limit:" + str(
+    #         page_limit) + ", csrf_token:\"\"}"
+    # elif param_type == "songs":
+    #     return "{uid:\"" + str(user_id) + "\",type:\"-1\",limit:\"1000\",offset:" + str(offset) + ",total:\"" + str(
+    #         total) + "\",csrf_token:\"\"}"
+    # elif param_type == "user":
+    #     return "{"
+    return "{s:\"" + "小明也来过" + "\",type:\"1002\",limit:\"1\",offset:\"0\"}"
 
 
 second_param = "010001"
