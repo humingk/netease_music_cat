@@ -1,10 +1,15 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# author: humingk
+# ----------------------
 import config
 import bs4
 import requests
-from user_playlists import user_playlists
+from netease.user_playlists import user_playlists
+import logger
+
+log = logger.loggler()
 
 
 class playlist_songs:
@@ -37,15 +42,20 @@ class playlist_songs:
         :param is_playlists_default: 是否爬取“用户喜欢的音乐”歌单
         :param is_playlists_created: 是否爬取用户创建的歌单
         :param is_playlists_collected: 是否爬取用户收藏的歌单
+        :return: status: 是否获取到歌曲
         :return: 用户歌单歌曲列表
         """
         # 获取用户的歌单列表
-        user_playlists_list = user_playlists().get_user_playlists(user_id=user_id,
-                                                                  created_playlists_max=created_playlists_max,
-                                                                  collected_playlists_max=collected_playlists_max,
-                                                                  is_playlists_default=is_playlists_default,
-                                                                  is_playlists_created=is_playlists_created,
-                                                                  is_playlists_collected=is_playlists_collected)
+        context = user_playlists().get_user_playlists(user_id=user_id,
+                                                      created_playlists_max=created_playlists_max,
+                                                      collected_playlists_max=collected_playlists_max,
+                                                      is_playlists_default=is_playlists_default,
+                                                      is_playlists_created=is_playlists_created,
+                                                      is_playlists_collected=is_playlists_collected)
+        if context[0]:
+            user_playlists_list = context[1]
+        else:
+            return False, []
         for playlist in user_playlists_list:
             # 获取不同类型歌单的歌曲最大数
             playlist_songs_max = config.playlist_songs_max
@@ -59,7 +69,9 @@ class playlist_songs:
             self.get_playlist_songs_by_playlist_id(playlist_id=playlist["playlist_id"],
                                                    playlist_type=playlist_type, playlist_songs_max=playlist_songs_max)
 
-        return self.playlist_songs_list
+        log.debug("playlist_songs",
+                  "get user-{}'s playlists-songs:songs-total-len-{}".format(user_id, len(self.playlist_songs_list)))
+        return True, self.playlist_songs_list
 
     def get_playlist_songs_by_playlist_id(self, playlist_id=config.playlist_id, playlist_type=config.playlist_type,
                                           playlist_songs_max=config.playlist_songs_max):
@@ -68,20 +80,29 @@ class playlist_songs:
         :param playlist_id: 歌单id
         :param playlist_type: 歌单类型，包括 default created collected
         :param playlist_songs_max: 歌单最大歌曲选取数
+        :return: status: 是否获取到歌曲
         :return: 歌单歌曲列表
         """
-        response = requests.session().get(config.get_playlist_url(playlist_id), headers=config.user_headers).content
+        try:
+            response = requests.session().get(config.get_playlist_url(playlist_id), headers=config.user_headers).content
+        except Exception as e:
+            log.error("playlist_songs",
+                      "get playlist-songs failed playlist-id:{} playlist-type:{}".format(playlist_id, playlist_type))
+            return False, []
         bs = bs4.BeautifulSoup(response, "lxml")
         songs = bs.find("ul", {"class": "f-hide"})
         song_count = 0
         for song in songs.find_all("a"):
             if (song_count >= playlist_songs_max):
                 break
-            self.__add(song, playlist_type)
+            self.__add(song, playlist_type,config.playlist_song_source)
             song_count += 1
-        return self.playlist_songs_list
 
-    def __add(self, song, playlist_type):
+        log.debug("playlist_songs",
+                  "get playlist-{}'s songs total-len:{}".format(playlist_id, len(self.playlist_songs_list)))
+        return True, self.playlist_songs_list
+
+    def __add(self, song, playlist_type,song_source_type=config.song_source_type):
         """
         添加歌曲
 
@@ -92,7 +113,8 @@ class playlist_songs:
         self.playlist_songs_list.append({
             "song_id": song["href"][9:],
             "song_name": song.get_text(),
-            "song_playlist_type": playlist_type
+            "song_source_type": song_source_type,
+            "song_source_playlist_type": playlist_type
         })
 
 

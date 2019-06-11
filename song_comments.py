@@ -5,14 +5,9 @@ import time
 from threading import Timer
 import multiprocessing
 import config
-import decrypt
+from netease import user_ranklist_songs, playlist_songs, decrypt
 import pymysql
-import playlist_songs
-import user_ranklist_songs
 import play_lists
-import warnings
-import sqlite3
-
 import ProxiesDataBase
 import Util
 
@@ -63,7 +58,8 @@ class comment:
         url = config.get_comments_url(song_id)
 
         # 获取第一页中response中的json数据项
-        response = json.loads(decrypt.get_json(url=config.get_comments_url(song_id), param_type="comments", total=True, offset=0, proxies=""))
+        response = json.loads(
+            decrypt.get_json(url=config.get_comments_url(song_id), param_type="comments", total=True, offset=0, proxies=""))
 
         # 获取第一页的置顶评论
         if response["topComments"]:
@@ -99,7 +95,8 @@ class comment:
     def get_page_comment(self, proxies, offset, url, song_name):
         try:
             # 获取第page页中response数据项
-            response = json.loads(decrypt.get_json(url=url, param_type="comments", total=False,offset=offset, proxies=proxies))
+            response = json.loads(
+                decrypt.get_json(url=url, param_type="comments", total=False, offset=offset, proxies=proxies))
             if response["comments"]:
                 for item in response["comments"]:
                     self.dict_save(item, song_name)

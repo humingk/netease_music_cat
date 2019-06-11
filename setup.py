@@ -11,7 +11,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="netease_music",
+    name="netease",
     version="2.0",
     author="humingk",
     keywords=["netease", "music", "comment"],

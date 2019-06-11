@@ -5,10 +5,8 @@ import time
 from threading import Timer
 import multiprocessing
 import config
-import decrypt
+from netease import user_ranklist_songs, playlist_songs, decrypt
 import pymysql
-import playlist_songs
-import user_ranklist_songs
 import play_lists
 import warnings
 import sqlite3

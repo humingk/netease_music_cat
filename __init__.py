@@ -1,4 +1,7 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from . import decrypt
+# author: humingk
+# ----------------------
+
+from  .netease import *

@@ -1,10 +1,15 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# author: humingk
+# ----------------------
 import config
 import json
 import sys
-import decrypt
+from netease.decrypt import decrypt
+import logger
+
+log = logger.loggler()
 
 
 class user_playlists:
@@ -17,7 +22,8 @@ class user_playlists:
         # 用户歌单的id列表
         self.user_playlists_list = []
 
-    def get_user_playlists(self, user_id=config.user_id, created_playlists_max=config.created_playlists_max, collected_playlists_max=config.collected_playlists_max,
+    def get_user_playlists(self, user_id=config.user_id, created_playlists_max=config.created_playlists_max,
+                           collected_playlists_max=config.collected_playlists_max,
                            is_playlists_default=config.is_playlists_default,
                            is_playlists_created=config.is_playlists_created,
                            is_playlists_collected=config.is_playlists_collected):
@@ -30,11 +36,16 @@ class user_playlists:
         :param is_playlists_default: 是否爬取”用户喜欢的音乐“歌单
         :param is_playlists_created: 是否爬取用户创建的歌单
         :param is_playlists_collected: 是否爬取用户收藏的歌单
+        :return: status: 是否获取到歌单
         :return: 歌单列表
         """
-        json_text = json.loads(
-            decrypt.get_json(user_id=user_id, url=config.url_playlists, param_type="songs", total=True, offset=0,
-                             proxies=""))
+
+        context = decrypt().get_json(user_id=user_id, url=config.url_playlists, param_type="songs", total=True,
+                                     offset=0, proxies="")
+        if context[0]:
+            json_text = json.loads(context[1])
+        else:
+            return False, []
         json_playlists_data = json_text["playlist"]
         playlist = 0
         created_playlists_count = 0
@@ -75,7 +86,9 @@ class user_playlists:
                 playlist += 1
                 continue
             break
-        return self.user_playlists_list
+
+        log.debug("user_playlists", "get user-{}'s playlists len:{}".format(user_id, len(self.user_playlists_list)))
+        return True, self.user_playlists_list
 
     def __add(self, playlist, data, playlist_type=config.playlist_type):
         """
