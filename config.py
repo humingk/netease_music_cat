@@ -134,12 +134,6 @@ user_headers = {
     "Accept-Language": language
 }
 
-# 当前页评论页数
-page_offset = "0"
-
-# 评论页数限制
-page_limit = "100"
-
 # 用于测试的歌曲id
 song_id = "656405"
 
@@ -163,29 +157,59 @@ logger_file_level = logging.DEBUG
 
 """
 
+# total参数默认值
+aes_total = True
 
-# 由core.js找到四个加密参数param
+# offset参数默认值
+aes_offset = 0
 
-def get_first_param(user_id, param_type, total, offset):
-    """
-    第一个加密参数；请求表单
-    :param param_type: 第一个param参数,由加密类型决定,eg:comments,songs
-    :param total: 目前暂时没发现影响，true or false
-    :param offset: 偏移量，默认0
-    :return: 请求表单
-    """
-    # if param_type == "comments":
-    #     print("{rid:\"\", offset:" + str(offset) + ", total:\"" + str(total) + "\", limit:" + str(
-    #         page_limit) + ", csrf_token:\"\"}")
-    #     return "{rid:\"\", offset:" + str(offset) + ", total:\"" + str(total) + "\", limit:" + str(
-    #         page_limit) + ", csrf_token:\"\"}"
-    # elif param_type == "songs":
-    #     return "{uid:\"" + str(user_id) + "\",type:\"-1\",limit:\"1000\",offset:" + str(offset) + ",total:\"" + str(
-    #         total) + "\",csrf_token:\"\"}"
-    # elif param_type == "user":
-    #     return "{"
-    return "{s:\"" + "小明也来过" + "\",type:\"1002\",limit:\"1\",offset:\"0\"}"
+# limit限制默认值
+aes_limit = 1000
 
+# 评论页数限制默认值
+aes_limit_page = 100
+
+# 用户排行榜类型默认值
+aes_ranklist_type = -1
+
+# 搜索 ----------------------------
+# 搜索单曲
+aes_search_song = 1
+# 搜索专辑
+aes_search_album = 10
+# 搜索歌手
+aes_search_artist = 100
+# 搜索歌单
+aes_search_playlist = 1000
+# 搜索用户
+aes_search_user = 1002
+# 搜索mv
+aes_search_mv = 1004
+# 搜索歌词
+aes_search_lyric = 1006
+# 搜索电台
+aes_search_radio = 1009
+# 搜索视频
+aes_search_video = 1014
+
+# 搜索表单类型默认值
+aes_search_type = aes_search_song
+
+# 四个请求参数 -------------------------------
+
+# 第一个参数在request_param中获取
+
+# 请求格式错误
+aes_param_error = 0
+# 请求评论
+aes_param_comment = 1
+# 请求用户排行榜
+aes_param_ranklist = 2
+# 请求搜索
+aes_param_search = 3
+
+# 默认请求类型
+aes_first_param_type = aes_param_error
 
 second_param = "010001"
 third_param = "00e0b509f6259df8642dbc35662901477df22677ec152b5ff68ace615bb7b725152b3ab17a876aea8a5aa76d2e417629ec4ee341f56135fccf695280104e0312ecbda92557c93870114af6c9d05c4f7f0c3685b7a46bee255932575cce10b424d813cfe4875d3e82047b97ddef52741d546b8e289dc6935b3ece0462db0a22b8e7"

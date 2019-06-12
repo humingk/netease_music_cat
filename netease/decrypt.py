@@ -74,6 +74,9 @@ class decrypt:
         :return: status: 是否成功获取
         :return: 返回结果
         """
+
+
+
         data = {
             "params": self.__get_params(user_id=user_id, param_type=param_type, total=total, offset=offset),
             "encSecKey": self.__get_encSecKey(),
