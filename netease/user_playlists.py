@@ -6,7 +6,8 @@
 import config
 import json
 import sys
-from netease.decrypt import decrypt
+from netease.first_param import first_param
+from netease.request_data import request_data
 import logger
 
 log = logger.loggler()
@@ -39,38 +40,39 @@ class user_playlists:
         :return: status: 是否获取到歌单
         :return: 歌单列表
         """
-
-        context = decrypt().get_json(user_id=user_id, url=config.url_playlists, param_type="songs", total=True,
-                                     offset=0, proxies="")
-        if context[0]:
-            json_text = json.loads(context[1])
+        # 请求参数
+        _first_param = first_param().get_first_param_user_playlists(user_id=user_id)
+        content = request_data().get_request_data(_first_param[1], url=config.url_user_playlists)
+        if content[0]:
+            json_playlists_data = json.loads(content[1])["playlist"]
         else:
             return False, []
-        json_playlists_data = json_text["playlist"]
-        playlist = 0
+        playlist_count = 0
         created_playlists_count = 0
         collected_playlists_count = 0
-        while playlist < len(json_playlists_data):
+        while playlist_count < len(json_playlists_data):
 
             # 爬取”用户喜欢的音乐“这一个歌单
             if is_playlists_default:
-                self.__add(playlist=playlist, data=json_playlists_data, playlist_type=config.default_playlist)
-                playlist += 1
+                self.__add(playlist_count=playlist_count, data=json_playlists_data,
+                           playlist_type=config.default_playlist)
+                playlist_count += 1
                 is_playlists_default = False
                 continue
 
             # 爬取用户创建的歌单
             elif is_playlists_created:
                 # 若此处出现playlist为0的情况，说明没有爬取“用户喜欢的音乐”歌单，跳过此歌单
-                if playlist == 0:
-                    playlist += 1
+                if playlist_count == 0:
+                    playlist_count += 1
                     continue
                 # 是否是用户自己创建的歌单
-                elif str(json_playlists_data[playlist]["creator"]['userId']) == str(user_id):
+                elif str(json_playlists_data[playlist_count]["creator"]['userId']) == str(user_id):
                     if created_playlists_count < created_playlists_max:
-                        self.__add(playlist=playlist, data=json_playlists_data, playlist_type=config.created_playlist)
+                        self.__add(playlist_count=playlist_count, data=json_playlists_data,
+                                   playlist_type=config.created_playlist)
                         created_playlists_count += 1
-                    playlist += 1
+                    playlist_count += 1
                 else:
                     is_playlists_created = False
                 continue
@@ -78,31 +80,34 @@ class user_playlists:
             # 爬取用户收藏的歌单
             elif is_playlists_collected:
                 # 是否是用户收藏的歌单
-                if str(json_playlists_data[playlist]["creator"]['userId']) != str(user_id):
+                if str(json_playlists_data[playlist_count]["creator"]['userId']) != str(user_id):
                     if collected_playlists_count < collected_playlists_max:
-                        self.__add(playlist=playlist, data=json_playlists_data, playlist_type=config.collected_playlist)
+                        self.__add(playlist_count=playlist_count, data=json_playlists_data,
+                                   playlist_type=config.collected_playlist)
                         collected_playlists_count += 1
                 # 若此处出现不是用户收藏的歌单情况，说明用户创建歌单没有完全爬取，继续循环
-                playlist += 1
+                playlist_count += 1
                 continue
             break
 
-        log.debug("user_playlists", "get user-{}'s playlists len:{}".format(user_id, len(self.user_playlists_list)))
+        log.debug("get user_playlists success",
+                  "user_id:{},playlist_sum:{},playlist_created_sum:{},playlist_collected_sum:{}"
+                  .format(user_id, playlist_count, created_playlists_count, collected_playlists_count))
         return True, self.user_playlists_list
 
-    def __add(self, playlist, data, playlist_type=config.playlist_type):
+    def __add(self, playlist_count, data, playlist_type=config.playlist_type):
         """
         添加到用户歌单列表
 
-        :param playlist: 歌单列表位移
+        :param playlist_count: 歌单列表位移
         :param data: 待添加数据
         :param playlist_type: 歌单类型
         """
         self.user_playlists_list.append({
-            "playlist_id": data[playlist]["id"],
-            "playlist_name": data[playlist]["name"],
+            "playlist_id": data[playlist_count]["id"],
+            "playlist_name": data[playlist_count]["name"],
             "playlist_type": playlist_type,
-            "playlist_playCount": data[playlist]["playCount"]
+            "playlist_playCount": data[playlist_count]["playCount"]
         })
 
 

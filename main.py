@@ -5,7 +5,7 @@ import time
 from threading import Timer
 import multiprocessing
 import config
-from netease import user_ranklist_songs, playlist_songs, decrypt
+from netease import user_ranklist_songs, playlist_songs, form_data
 import pymysql
 import play_lists
 import warnings
@@ -61,8 +61,8 @@ class comment:
 
         # 获取第一页中header中的Form Data数据项
         first_param = config.first_param
-        params_obj_1 = decrypt.get_params(first_param)
-        encSecKey_obj_1 = decrypt.get_encSecKey()
+        params_obj_1 = form_data.get_params(first_param)
+        encSecKey_obj_1 = form_data.get_encSecKey()
 
         url = "http://music.163.com/weapi/v1/resource/comments/R_SO_4_" + str(song_id) + "?csrf_token="
 
@@ -82,7 +82,7 @@ class comment:
         print("ip: " + str(proxies["http"]))
 
         # 获取第一页中response中的json数据项
-        json_text_1 = decrypt.get_json(url, params_obj_1, encSecKey_obj_1, proxies)
+        json_text_1 = form_data.get_json(url, params_obj_1, encSecKey_obj_1, proxies)
         json_obj_1 = json.loads(json_text_1)
 
         # 获取第一页的置顶评论
@@ -132,11 +132,11 @@ class comment:
             param_n = "{rid:\"\", offset:" + str(
                 offset) + ", total:\"false\", limit:" + page_limit + ", csrf_token:\"\"}"
             # 获取第page页中header中的Form Data数据项
-            params_obj_n = decrypt.get_params(param_n)
-            encSecKey_obj_n = decrypt.get_encSecKey()
+            params_obj_n = form_data.get_params(param_n)
+            encSecKey_obj_n = form_data.get_encSecKey()
 
             # 获取第page页中response中的json数据项
-            json_text_n = decrypt.get_json(url, params_obj_n, encSecKey_obj_n, proxies)
+            json_text_n = form_data.get_json(url, params_obj_n, encSecKey_obj_n, proxies)
             json_obj_n = json.loads(json_text_n)
             if json_obj_n["comments"]:
                 for item in json_obj_n["comments"]:

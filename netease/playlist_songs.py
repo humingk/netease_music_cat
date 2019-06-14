@@ -3,10 +3,12 @@
 
 # author: humingk
 # ----------------------
+import json
+
 import config
-import bs4
-import requests
 from netease.user_playlists import user_playlists
+from netease.first_param import first_param
+from netease.request_data import request_data
 import logger
 
 log = logger.loggler()
@@ -46,14 +48,14 @@ class playlist_songs:
         :return: 用户歌单歌曲列表
         """
         # 获取用户的歌单列表
-        context = user_playlists().get_user_playlists(user_id=user_id,
+        content = user_playlists().get_user_playlists(user_id=user_id,
                                                       created_playlists_max=created_playlists_max,
                                                       collected_playlists_max=collected_playlists_max,
                                                       is_playlists_default=is_playlists_default,
                                                       is_playlists_created=is_playlists_created,
                                                       is_playlists_collected=is_playlists_collected)
-        if context[0]:
-            user_playlists_list = context[1]
+        if content[0]:
+            user_playlists_list = content[1]
         else:
             return False, []
         for playlist in user_playlists_list:
@@ -83,41 +85,37 @@ class playlist_songs:
         :return: status: 是否获取到歌曲
         :return: 歌单歌曲列表
         """
-        try:
-            response = requests.session().get(config.get_playlist_url(playlist_id), headers=config.user_headers).content
-        except Exception as e:
-            log.error("playlist_songs",
-                      "get playlist-songs failed playlist-id:{} playlist-type:{}".format(playlist_id, playlist_type))
+        _first_param = first_param().get_first_param_playlist(playlist_id)
+        content = request_data().get_request_data(first_param=_first_param[1], url=config.url_playlist)
+        if content[0]:
+            songs = json.loads(content[1])["playlist"]["tracks"]
+        else:
             return False, []
-        bs = bs4.BeautifulSoup(response, "lxml")
-        songs = bs.find("ul", {"class": "f-hide"})
         song_count = 0
-        for song in songs.find_all("a"):
-            if (song_count >= playlist_songs_max):
-                break
-            self.__add(song, playlist_type,config.playlist_song_source)
+        while song_count < playlist_songs_max and song_count < len(songs):
+            self.__add(songs[song_count], playlist_type)
             song_count += 1
 
-        log.debug("playlist_songs",
-                  "get playlist-{}'s songs total-len:{}".format(playlist_id, len(self.playlist_songs_list)))
+        log.debug("get_playlist_songs_by_playlist_id success",
+                  "playlist_id:{},playlist_type:{},playlist_songs_count:{}"
+                  .format(playlist_id, playlist_type, song_count))
         return True, self.playlist_songs_list
 
-    def __add(self, song, playlist_type,song_source_type=config.song_source_type):
+    def __add(self, song, playlist_type):
         """
         添加歌曲
 
         :param song: 歌曲位移
         :param playlist_type: 歌曲所属歌单类型
         """
-        # song="<a href="/song?id=1518938">As Long As You Love Me</a>"
         self.playlist_songs_list.append({
-            "song_id": song["href"][9:],
-            "song_name": song.get_text(),
-            "song_source_type": song_source_type,
-            "song_source_playlist_type": playlist_type
+            "song_id": song["id"],
+            "song_name": song["name"],
+            "song_source": config.song_source_playlist,
+            "song_source_type": playlist_type,
         })
 
 
 if __name__ == "__main__":
     print(playlist_songs().get_playlist_songs_by_playlist_id())
-    print(playlist_songs().get_playlist_songs_by_user_id())
+    # print(playlist_songs().get_playlist_songs_by_user_id())

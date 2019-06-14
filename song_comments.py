@@ -5,7 +5,7 @@ import time
 from threading import Timer
 import multiprocessing
 import config
-from netease import user_ranklist_songs, playlist_songs, decrypt
+from netease import user_ranklist_songs, playlist_songs, form_data
 import pymysql
 import play_lists
 import ProxiesDataBase
@@ -59,7 +59,7 @@ class comment:
 
         # 获取第一页中response中的json数据项
         response = json.loads(
-            decrypt.get_json(url=config.get_comments_url(song_id), param_type="comments", total=True, offset=0, proxies=""))
+            form_data.get_json(url=config.get_comments_url(song_id), param_type="comments", total=True, offset=0, proxies=""))
 
         # 获取第一页的置顶评论
         if response["topComments"]:
@@ -96,7 +96,7 @@ class comment:
         try:
             # 获取第page页中response数据项
             response = json.loads(
-                decrypt.get_json(url=url, param_type="comments", total=False, offset=offset, proxies=proxies))
+                form_data.get_json(url=url, param_type="comments", total=False, offset=offset, proxies=proxies))
             if response["comments"]:
                 for item in response["comments"]:
                     self.dict_save(item, song_name)
