@@ -26,11 +26,11 @@ class database_pool:
             # 使用数据库模块
             creator=pymysql,
             # 数据库最大连接数
-            maxconnections=10,
+            maxconnections=1,
             # 初始化时，链接池中至少创建的空闲的链接
-            mincached=3,
+            mincached=1,
             # 初始化时，链接池中至多创建的空闲的链接
-            maxcached=10,
+            maxcached=1,
             # 链接池中最多共享的链接数量
             # PS: 无用，因为pymysql和MySQLdb等模块的 threadsafety都为1
             # 所有值无论设置为多少，_maxcached永远为0，所以永远是所有链接都共享
@@ -52,20 +52,64 @@ class database_pool:
             database=database_name,
             charset=database_charset
         )
+        self.conn = self.__connect()
 
     def __new__(cls, *args, **kwargs):
         if not hasattr(database_pool, "_instance"):
             with database_pool._instance_lock:
                 if not hasattr(database_pool, "_instance"):
-                    database_pool._instance = object.__new__(cls, *args, **kwargs)
+                    try:
+                        database_pool._instance = object.__new__(cls, *args, **kwargs)
+                        log.debug("database create pool success", "")
+                    except Exception as e:
+                        log.error("database create pool failed", "error:{}".format(e))
         return database_pool._instance
 
-    def connect(self):
-        return self.pool.connection()
+    def __connect(self):
+        """
+        建立数据库连接
+
+        """
+        try:
+            self.conn = self.pool.connection()
+            log.debug("database connect success", "")
+        except Exception as e:
+            self.conn = None
+            log.error("database connect failed", "error:{}".format(e))
+        return self.conn
+
+    def execute(self, sql):
+        """
+        execute语句
+
+        :param sql: sql语句
+        :return:
+        """
+
+        try:
+            self.conn.cursor().execute(sql)
+            log.debug("database execute success", "sql:{}".format(sql))
+            return True
+        except pymysql.err.IntegrityError:
+            log.error("database execute duplicate", "sql:{}".format(sql))
+            return True
+        except Exception as e:
+            log.error("database execute failed", "sql:{},error:{}".format(sql, e))
+            return False
+
+    def commit(self):
+        try:
+            self.conn.commit()
+            log.debug("database commit success", "")
+            return True
+        except Exception as e:
+            log.error("database commit failed", "error:{}".format(e))
+            return False
 
 
 if __name__ == '__main__':
-    pool = database_pool()
-    conn = pool.connect()
-    cursor = conn.cursor()
-    cursor.execute("insert into user(user_id,user_name) values(474252223,'IsolationTom') ")
+    for i in range(20):
+        pool = database_pool()
+        pool.execute("insert into user(user_id,user_name) values(474252223,'IsolationTom') ")
+        pool.commit()
+        print(id(pool))

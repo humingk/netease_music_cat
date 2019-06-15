@@ -57,11 +57,11 @@ CREATE TABLE user_ranklist
 
 CREATE TABLE song
 (
-    song_id                   int(15)  NOT NULL,
-    song_name                 char(20) NOT NULL,
-    song_source_type          int(1)   NOT NULL,
-    song_source_playlist_type int(1)   NOT NULL,
-    song_source_rank_type     int(1)   NOT NULL,
+    song_id          int(15)  NOT NULL,
+    song_name        char(20) NOT NULL,
+    song_source      int(1)   NOT NULL default 0,
+    song_source_type int(1)   NOT NULL default 0,
+    rank_score       int(1)   NOT NULL default 0,
     primary key (song_id),
     index song_name (song_name)
 ) ENGINE = InnoDB

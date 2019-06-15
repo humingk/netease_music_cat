@@ -12,4 +12,3 @@ from .user_ranklist_songs import user_ranklist_songs
 from .playlist_songs import playlist_songs
 from .search import search
 from .database_pool import database_pool
-from .database_tool import database_tool

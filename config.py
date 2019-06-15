@@ -42,14 +42,14 @@ database_charset = "utf8mb4"
 # 排行榜类型
 
 # 最近一周
-rank_type_week = 1
+rank_type_week = 2
 # 所有时间
-rank_type_all = 0
+rank_type_all = 1
 # 最近一周+所有时间
-rank_type_week_all = -1
+rank_type_week_all = 3
 
 # 默认排行榜类型
-rank_type = rank_type_all
+rank_type = 0
 
 # 排行榜单中"最近一周"的最大歌曲选取数
 week_rank_max = 100
@@ -73,13 +73,13 @@ song_source_type = song_source_default
 # 标准歌单 ------------------------------
 
 # 歌单类型
-normal_playlist = 0
-default_playlist = 1
-created_playlist = 2
-collected_playlist = 3
+normal_playlist = 4
+default_playlist = 5
+created_playlist = 6
+collected_playlist = 7
 
 # 标准歌单默认类型
-playlist_type = normal_playlist
+playlist_type = 0
 
 # 标准歌单最大歌曲选取数
 playlist_songs_max = 50

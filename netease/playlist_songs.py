@@ -87,9 +87,13 @@ class playlist_songs:
         """
         _first_param = first_param().get_first_param_playlist(playlist_id)
         content = request_data().get_request_data(first_param=_first_param[1], url=config.url_playlist)
-        if content[0]:
-            songs = json.loads(content[1])["playlist"]["tracks"]
-        else:
+        try:
+            if content[0]:
+                songs = json.loads(content[1])["playlist"]["tracks"]
+            else:
+                return False, []
+        except Exception as e:
+            log.error("get_playlist_songs failed", "playlist_id:{},error:{}".format(playlist_id, e))
             return False, []
         song_count = 0
         while song_count < playlist_songs_max and song_count < len(songs):

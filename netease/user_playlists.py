@@ -43,9 +43,13 @@ class user_playlists:
         # 请求参数
         _first_param = first_param().get_first_param_user_playlists(user_id=user_id)
         content = request_data().get_request_data(_first_param[1], url=config.url_user_playlists)
-        if content[0]:
-            json_playlists_data = json.loads(content[1])["playlist"]
-        else:
+        try:
+            if content[0]:
+                json_playlists_data = json.loads(content[1])["playlist"]
+            else:
+                return False, []
+        except Exception as e:
+            log.error("get_user_playlists failed", "user_id:{},error:{}".format(user_id, e))
             return False, []
         playlist_count = 0
         created_playlists_count = 0
