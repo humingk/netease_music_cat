@@ -6,9 +6,9 @@
 import requests
 from netease.form_data import form_data
 import config
-import logger
+from logger import loggler
 
-log = logger.loggler()
+log = loggler()
 
 
 class request_data:

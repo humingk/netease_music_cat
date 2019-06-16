@@ -6,9 +6,9 @@
 import config
 import base64
 from Crypto.Cipher import AES
-import logger
+from logger import loggler
 
-log = logger.loggler()
+log = loggler()
 
 
 class form_data:

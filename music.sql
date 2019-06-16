@@ -3,8 +3,8 @@ CREATE DATABASE IF NOT EXISTS netease_music DEFAULT CHARSET utf8mb4 COLLATE utf8
 
 CREATE TABLE user
 (
-    user_id   int(15)  NOT NULL,
-    user_name char(20) NOT NULL,
+    user_id   char(20) NOT NULL,
+    user_name char(20) NOT NULL default "",
     primary key (user_id),
     index (user_name)
 ) ENGINE = InnoDB
@@ -13,10 +13,10 @@ CREATE TABLE user
 
 CREATE TABLE playlist
 (
-    playlist_id         int(15)  NOT NULL,
-    playlist_name       char(20) NOT NULL,
-    playlist_type       int(1)   NOT NULL,
-    playlist_play_count int      NOT NULL,
+    playlist_id         char(20)     NOT NULL,
+    playlist_name       varchar(100) NOT NULL default "",
+    playlist_type       int(1)       NOT NULL default 4,
+    playlist_play_count int          NOT NULL default 0,
     primary key (playlist_id),
     index playlist_name (playlist_name),
     index playlist_type (playlist_type),
@@ -27,8 +27,8 @@ CREATE TABLE playlist
 
 CREATE TABLE user_playlist
 (
-    user_id     int(15) NOT NULL,
-    playlist_id int(15) NOT NULL,
+    user_id     char(20) NOT NULL,
+    playlist_id char(20) NOT NULL,
     primary key (user_id, playlist_id),
     foreign key (user_id) references user (user_id),
     foreign key (playlist_id) references playlist (playlist_id)
@@ -38,16 +38,16 @@ CREATE TABLE user_playlist
 
 CREATE TABLE ranklist
 (
-    ranklist_id   int(15) NOT NULL auto_increment,
-    ranklist_type int(1)  NOT NULL,
+    ranklist_id   char(20) NOT NULL,
+    ranklist_type int(1)   NOT NULL default 0,
     primary key (ranklist_id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE user_ranklist
 (
-    user_id     int(15) NOT NULL,
-    ranklist_id int(15) NOT NULL,
+    user_id     char(20) NOT NULL,
+    ranklist_id char(20) NOT NULL,
     primary key (user_id, ranklist_id),
     foreign key (user_id) references user (user_id),
     foreign key (ranklist_id) references ranklist (ranklist_id)
@@ -57,11 +57,11 @@ CREATE TABLE user_ranklist
 
 CREATE TABLE song
 (
-    song_id          int(15)  NOT NULL,
-    song_name        char(20) NOT NULL,
-    song_source      int(1)   NOT NULL default 0,
-    song_source_type int(1)   NOT NULL default 0,
-    rank_score       int(1)   NOT NULL default 0,
+    song_id          char(20)     NOT NULL,
+    song_name        varchar(100) NOT NULL default "",
+    song_source      int(1)       NOT NULL default 0,
+    song_source_type int(1)       NOT NULL default 0,
+    rank_score       int(3)       NOT NULL default 0,
     primary key (song_id),
     index song_name (song_name)
 ) ENGINE = InnoDB
@@ -69,8 +69,8 @@ CREATE TABLE song
 
 CREATE TABLE song_playlist
 (
-    song_id     int(15) NOT NULL,
-    playlist_id int(15) NOT NULL,
+    song_id     char(20) NOT NULL,
+    playlist_id char(20) NOT NULL,
     primary key (song_id, playlist_id),
     foreign key (song_id) references song (song_id),
     foreign key (playlist_id) references playlist (playlist_id)
@@ -79,8 +79,8 @@ CREATE TABLE song_playlist
 
 CREATE TABLE song_ranklist
 (
-    song_id     int(15) NOT NULL,
-    ranklist_id int(15) NOT NULL,
+    song_id     char(20) NOT NULL,
+    ranklist_id char(20) NOT NULL,
     primary key (song_id, ranklist_id),
     foreign key (song_id) references song (song_id),
     foreign key (ranklist_id) references ranklist (ranklist_id)
@@ -89,8 +89,8 @@ CREATE TABLE song_ranklist
 
 CREATE TABLE user_song
 (
-    user_id int(15) NOT NULL,
-    song_id int(15) NOT NULL,
+    user_id char(20) NOT NULL,
+    song_id char(20) NOT NULL,
     primary key (user_id, song_id),
     foreign key (user_id) references user (user_id),
     foreign key (song_id) references song (song_id)
@@ -99,9 +99,11 @@ CREATE TABLE user_song
 
 CREATE TABLE comment
 (
-    comment_id      int(18)      NOT NULL,
-    comment_content varchar(200) NOT NULL,
-    comment_data    int(18)      NOT NULL,
+    comment_id      char(20)     NOT NULL,
+    comment_content varchar(200) NOT NULL default "",
+    comment_data    char(20)     NOT NULL default "",
+    comment_type    int(1)       NOT NULL default 0,
+    comment_like    int(8)       NOT NULL default 0,
     primary key (comment_id),
     index comment_comtent (comment_content)
 ) ENGINE = INNODB
@@ -109,8 +111,8 @@ CREATE TABLE comment
 
 CREATE TABLE user_comment
 (
-    user_id    int(15) NOT NULL,
-    comment_id int(18) NOT NULL,
+    user_id    char(20) NOT NULL,
+    comment_id char(20) NOT NULL,
     primary key (user_id, comment_id),
     foreign key (user_id) references user (user_id),
     foreign key (comment_id) references comment (comment_id)
@@ -119,8 +121,8 @@ CREATE TABLE user_comment
 
 CREATE TABLE song_comment
 (
-    song_id    int(15) NOT NULL,
-    comment_id int(18) NOT NULL,
+    song_id    char(20) NOT NULL,
+    comment_id char(20) NOT NULL,
     primary key (song_id, comment_id),
     foreign key (song_id) references song (song_id),
     foreign key (comment_id) references comment (comment_id)

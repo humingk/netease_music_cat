@@ -33,8 +33,7 @@ class first_param:
         else:
             return False, ""
 
-    def get_first_param_comment(self, total=config.aes_total, offset=config.aes_offset,
-                                limit=config.aes_limit_page):
+    def get_first_param_comment(self, offset=config.aes_offset, limit=config.aes_limit_page):
         """
         歌曲评论参数
 
@@ -44,8 +43,7 @@ class first_param:
         :return: status:是否成功获取
         :return: 请求参数
         """
-        return True, """{{rid:"{}",offset:"{}",total:"{}",limit:"{}",csrf_token:"{}"}}""" \
-            .format("", offset, total, limit, "")
+        return True, """{{rid:"{}",offset:"{}",limit:"{}"}}""".format("", offset, limit, "")
 
     def get_first_param_ranklist(self, user_id=config.user_id, rank_type=config.rank_type):
         """

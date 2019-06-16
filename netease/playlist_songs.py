@@ -5,13 +5,16 @@
 # ----------------------
 import json
 
+import pymysql
+
 import config
+from database_pool import database_pool
 from netease.user_playlists import user_playlists
 from netease.first_param import first_param
 from netease.request_data import request_data
-import logger
+from logger import loggler
 
-log = logger.loggler()
+log = loggler()
 
 
 class playlist_songs:
@@ -96,30 +99,42 @@ class playlist_songs:
             log.error("get_playlist_songs failed", "playlist_id:{},error:{}".format(playlist_id, e))
             return False, []
         song_count = 0
+        pool = database_pool()
+        pool.execute("insert into playlist(playlist_id) values({})".format(playlist_id))
+        pool.commit()
         while song_count < playlist_songs_max and song_count < len(songs):
-            self.__add(songs[song_count], playlist_type)
+            self.__add(songs[song_count], playlist_id, playlist_type, pool)
             song_count += 1
-
+        pool.commit()
         log.debug("get_playlist_songs_by_playlist_id success",
                   "playlist_id:{},playlist_type:{},playlist_songs_count:{}"
                   .format(playlist_id, playlist_type, song_count))
         return True, self.playlist_songs_list
 
-    def __add(self, song, playlist_type):
+    def __add(self, song, playlist_id, playlist_type, pool):
         """
         添加歌曲
 
         :param song: 歌曲位移
+        :param playlist_id: 歌单id
         :param playlist_type: 歌曲所属歌单类型
+        :param pool: 数据库连接池
         """
-        self.playlist_songs_list.append({
+        song = {
             "song_id": song["id"],
             "song_name": song["name"],
             "song_source": config.song_source_playlist,
             "song_source_type": playlist_type,
-        })
+        }
+        self.playlist_songs_list.append(song)
+        pool.execute(
+            "replace into song(song_id,song_name,song_source,song_source_type) values({},'{}',{},{})"
+                .format(song["song_id"], pymysql.escape_string(song["song_name"]), song["song_source"],
+                        song["song_source_type"]))
+        pool.execute(
+            "replace into song_playlist(song_id, playlist_id) values({},{})".format(song["song_id"], playlist_id))
 
 
 if __name__ == "__main__":
-    print(playlist_songs().get_playlist_songs_by_playlist_id())
-    # print(playlist_songs().get_playlist_songs_by_user_id())
+    # print(playlist_songs().get_playlist_songs_by_playlist_id())
+    print(playlist_songs().get_playlist_songs_by_user_id())

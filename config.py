@@ -39,17 +39,17 @@ database_name = "netease_music"
 database_charset = "utf8mb4"
 
 # 用户排行榜 ----------------------------
-# 排行榜类型
+# 排行榜类型(请求表单参数，不可随意更改！)
 
 # 最近一周
-rank_type_week = 2
+rank_type_week = 1
 # 所有时间
-rank_type_all = 1
+rank_type_all = 0
 # 最近一周+所有时间
-rank_type_week_all = 3
+rank_type_week_all = -1
 
 # 默认排行榜类型
-rank_type = 0
+rank_type = 1
 
 # 排行榜单中"最近一周"的最大歌曲选取数
 week_rank_max = 100
@@ -122,6 +122,11 @@ song_comments_new_max = 10000
 
 # 最旧评论
 song_comments_old_max = 10000
+
+# 评论类型
+song_comments_type_default = 0
+song_comments_type_hot = 1
+song_comments_type = song_source_default
 
 # 以下为基础配置，请勿更改=================================================
 
@@ -234,7 +239,7 @@ encSecKey = "257348aecb5e556c066de214e531faadd1c55d814f9be95fd06d6bff9f4c7a41f83
 # url ================================================================
 
 # 用户排行榜url
-url_user_rank = 'http://music.163.com/weapi/v1/play/record'
+url_user_rank = "https://music.163.com/weapi/v1/play/record"
 
 # 用户主页歌单url
 url_user_playlists = "https://music.163.com/weapi/user/playlist"
@@ -252,13 +257,14 @@ def get_playlist_url(playlist_id):
     :param playlist_id: 歌单id
     :return: 歌单url
     """
-    return "https://music.163.com/playlist?id=" + str(playlist_id)
+    return "https://music.163.com/playlist?id={}".format(playlist_id)
 
 
 def get_comments_url(song_id):
     """
     歌曲评论url+歌曲id
+
     :param song_id: 歌曲id
     :return: 歌曲评论url
     """
-    return "http://music.163.com/weapi/v1/resource/comments/R_SO_4_" + str(song_id) + "?csrf_token="
+    return "http://music.163.com/weapi/v1/resource/comments/R_SO_4_{}".format(song_id)

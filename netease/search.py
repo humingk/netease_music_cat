@@ -4,11 +4,11 @@
 # author: humingk
 # ----------------------
 import config
-import logger
 from netease.first_param import first_param
 from netease.request_data import request_data
+from logger import loggler
 
-log = logger.loggler()
+log = loggler()
 
 
 class search:

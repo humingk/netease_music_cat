@@ -26,11 +26,11 @@ class database_pool:
             # 使用数据库模块
             creator=pymysql,
             # 数据库最大连接数
-            maxconnections=1,
+            maxconnections=10,
             # 初始化时，链接池中至少创建的空闲的链接
-            mincached=1,
+            mincached=5,
             # 初始化时，链接池中至多创建的空闲的链接
-            maxcached=1,
+            maxcached=10,
             # 链接池中最多共享的链接数量
             # PS: 无用，因为pymysql和MySQLdb等模块的 threadsafety都为1
             # 所有值无论设置为多少，_maxcached永远为0，所以永远是所有链接都共享
@@ -85,14 +85,16 @@ class database_pool:
         :param sql: sql语句
         :return:
         """
-
         try:
             self.conn.cursor().execute(sql)
-            log.debug("database execute success", "sql:{}".format(sql))
+            # log.debug("database execute success", "sql:{}".format(sql))
             return True
-        except pymysql.err.IntegrityError:
-            log.error("database execute duplicate", "sql:{}".format(sql))
+        except pymysql.err.IntegrityError as e:
+            log.warning("database execute duplicate", "sql:{},error:{}".format(sql, e))
             return True
+        except pymysql.err.DataError as e:
+            log.warning("database execute too long", "sql:{},error:{}".format(sql, e))
+            return False
         except Exception as e:
             log.error("database execute failed", "sql:{},error:{}".format(sql, e))
             return False

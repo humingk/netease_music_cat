@@ -6,9 +6,9 @@
 import json
 import config
 from netease.search import search
-import logger
+from logger import loggler
 
-log = logger.loggler()
+log = loggler()
 
 
 class user_message:

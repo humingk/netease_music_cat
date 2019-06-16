@@ -4,7 +4,6 @@
 # author: humingk
 # ----------------------
 import logging
-import os
 
 import config
 
