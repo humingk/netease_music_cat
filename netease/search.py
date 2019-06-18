@@ -6,9 +6,9 @@
 import config
 from netease.first_param import first_param
 from netease.request_data import request_data
-from logger import loggler
+from logger_tool import loggler_tool
 
-log = loggler()
+logger = loggler_tool()
 
 
 class search:
@@ -32,7 +32,7 @@ class search:
             json_data = content[1]
         else:
             return False, None
-        log.debug("get_search success", "search_keyword:{},search_type:{}".format(search_keyword, search_type))
+        logger.debug("get_search success", "search_keyword:{},search_type:{}".format(search_keyword, search_type))
         return True, content[1]
 
 

@@ -100,10 +100,9 @@ CREATE TABLE user_song
 CREATE TABLE comment
 (
     comment_id      char(20)     NOT NULL,
-    comment_content varchar(200) NOT NULL default "",
-    comment_data    char(20)     NOT NULL default "",
     comment_type    int(1)       NOT NULL default 0,
-    comment_like    int(8)       NOT NULL default 0,
+    comment_date    char(20)     NOT NULL default "",
+    comment_content varchar(200) NOT NULL default "",
     primary key (comment_id),
     index comment_comtent (comment_content)
 ) ENGINE = INNODB

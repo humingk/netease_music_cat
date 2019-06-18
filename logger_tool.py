@@ -20,7 +20,7 @@ def singleton(cls):
 
 
 @singleton
-class loggler:
+class loggler_tool:
     """
     日志工具类（单例模式）
 
@@ -78,7 +78,7 @@ class loggler:
 
 
 if __name__ == '__main__':
-    log = loggler()
+    log = loggler_tool()
     log.debug("test1", 'This is a customer debug message')
     log.info("test2", 'This is an customer info message')
     log.warning('This is a customer warning message')

@@ -6,9 +6,9 @@
 import requests
 from netease.form_data import form_data
 import config
-from logger import loggler
+from logger_tool import loggler_tool
 
-log = loggler()
+logger = loggler_tool()
 
 
 class request_data:
@@ -33,12 +33,12 @@ class request_data:
         try:
             response = requests.post(url=url, headers=config.user_headers, data=_form_data, proxies=proxies).content
             status = True
-            log.debug("get_request_data success",
+            logger.debug("get_request_data success",
                       "url:{} ,first_param:{},proxies:{}".format(url, first_param, proxies))
         except Exception as e:
             response = None
             status = False
-            log.error("get_request_data failed",
+            logger.error("get_request_data failed",
                       "url:{} ,first_param:{},proxies:{},error:{}".format(url, first_param, proxies, e))
         return status, response
 

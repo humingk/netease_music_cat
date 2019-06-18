@@ -33,7 +33,7 @@ class first_param:
         else:
             return False, ""
 
-    def get_first_param_comment(self, offset=config.aes_offset, limit=config.aes_limit_page):
+    def get_first_param_comment(self, offset=config.aes_offset, limit=config.song_comments_page_limit):
         """
         歌曲评论参数
 

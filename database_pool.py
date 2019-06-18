@@ -7,9 +7,9 @@ import threading
 from DBUtils.PooledDB import PooledDB
 import pymysql
 import config
-import logger
+from logger_tool import loggler_tool
 
-log = logger.loggler()
+logger = loggler_tool()
 
 
 class database_pool:
@@ -60,9 +60,9 @@ class database_pool:
                 if not hasattr(database_pool, "_instance"):
                     try:
                         database_pool._instance = object.__new__(cls, *args, **kwargs)
-                        log.debug("database create pool success", "")
+                        logger.debug("database create pool success", "")
                     except Exception as e:
-                        log.error("database create pool failed", "error:{}".format(e))
+                        logger.error("database create pool failed", "error:{}".format(e))
         return database_pool._instance
 
     def __connect(self):
@@ -72,10 +72,10 @@ class database_pool:
         """
         try:
             self.conn = self.pool.connection()
-            log.debug("database connect success", "")
+            logger.debug("database connect success", "")
         except Exception as e:
             self.conn = None
-            log.error("database connect failed", "error:{}".format(e))
+            logger.error("database connect failed", "error:{}".format(e))
         return self.conn
 
     def execute(self, sql):
@@ -87,25 +87,25 @@ class database_pool:
         """
         try:
             self.conn.cursor().execute(sql)
-            # log.debug("database execute success", "sql:{}".format(sql))
+            # logger.debug("database execute success", "sql:{}".format(sql))
             return True
         except pymysql.err.IntegrityError as e:
-            log.warning("database execute duplicate", "sql:{},error:{}".format(sql, e))
+            logger.warning("database execute duplicate", "sql:{},error:{}".format(sql, e))
             return True
         except pymysql.err.DataError as e:
-            log.warning("database execute too long", "sql:{},error:{}".format(sql, e))
+            logger.warning("database execute too long", "sql:{},error:{}".format(sql, e))
             return False
         except Exception as e:
-            log.error("database execute failed", "sql:{},error:{}".format(sql, e))
+            logger.error("database execute failed", "sql:{},error:{}".format(sql, e))
             return False
 
     def commit(self):
         try:
             self.conn.commit()
-            log.debug("database commit success", "")
+            # logger.debug("database commit success", "")
             return True
         except Exception as e:
-            log.error("database commit failed", "error:{}".format(e))
+            logger.error("database commit failed", "error:{}".format(e))
             return False
 
 

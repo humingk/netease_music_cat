@@ -117,11 +117,15 @@ collected_songs_max = 20
 # 歌曲评论 ------------------------------
 # 每首歌的最大评论获取数(目前只能获取时间正序和时间倒序各10000条)
 
-# 最新评论
+# 最新评论最大
 song_comments_new_max = 10000
-
-# 最旧评论
+# 最旧评论最大
 song_comments_old_max = 10000
+
+# 评论页数限制默认值
+song_comments_page_limit = 100
+# 抓取评论多线程默认个数
+song_comments_thread_count = 20
 
 # 评论类型
 song_comments_type_default = 0
@@ -176,9 +180,6 @@ aes_offset = 0
 
 # limit限制默认值
 aes_limit = 1000
-
-# 评论页数限制默认值
-aes_limit_page = 100
 
 # 用户排行榜类型默认值(暂时未知用途)
 aes_ranklist_type = -1

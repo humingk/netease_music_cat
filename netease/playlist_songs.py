@@ -12,9 +12,9 @@ from database_pool import database_pool
 from netease.user_playlists import user_playlists
 from netease.first_param import first_param
 from netease.request_data import request_data
-from logger import loggler
+from logger_tool import loggler_tool
 
-log = loggler()
+logger = loggler_tool()
 
 
 class playlist_songs:
@@ -74,7 +74,7 @@ class playlist_songs:
             self.get_playlist_songs_by_playlist_id(playlist_id=playlist["playlist_id"],
                                                    playlist_type=playlist_type, playlist_songs_max=playlist_songs_max)
 
-        log.debug("playlist_songs",
+        logger.debug("playlist_songs",
                   "get user-{}'s playlists-songs:songs-total-len-{}".format(user_id, len(self.playlist_songs_list)))
         return True, self.playlist_songs_list
 
@@ -96,17 +96,17 @@ class playlist_songs:
             else:
                 return False, []
         except Exception as e:
-            log.error("get_playlist_songs failed", "playlist_id:{},error:{}".format(playlist_id, e))
+            logger.error("get_playlist_songs failed", "playlist_id:{},error:{}".format(playlist_id, e))
             return False, []
         song_count = 0
         pool = database_pool()
-        pool.execute("insert into playlist(playlist_id) values({})".format(playlist_id))
+        pool.execute("insert into playlist(playlist_id) values('{}')".format(playlist_id))
         pool.commit()
         while song_count < playlist_songs_max and song_count < len(songs):
             self.__add(songs[song_count], playlist_id, playlist_type, pool)
             song_count += 1
         pool.commit()
-        log.debug("get_playlist_songs_by_playlist_id success",
+        logger.debug("get_playlist_songs_by_playlist_id success",
                   "playlist_id:{},playlist_type:{},playlist_songs_count:{}"
                   .format(playlist_id, playlist_type, song_count))
         return True, self.playlist_songs_list
@@ -128,11 +128,11 @@ class playlist_songs:
         }
         self.playlist_songs_list.append(song)
         pool.execute(
-            "replace into song(song_id,song_name,song_source,song_source_type) values({},'{}',{},{})"
+            "replace into song(song_id,song_name,song_source,song_source_type) values('{}','{}',{},{})"
                 .format(song["song_id"], pymysql.escape_string(song["song_name"]), song["song_source"],
                         song["song_source_type"]))
         pool.execute(
-            "replace into song_playlist(song_id, playlist_id) values({},{})".format(song["song_id"], playlist_id))
+            "replace into song_playlist(song_id, playlist_id) values('{}','{}')".format(song["song_id"], playlist_id))
 
 
 if __name__ == "__main__":

@@ -11,3 +11,5 @@ from .user_playlists import user_playlists
 from .user_ranklist_songs import user_ranklist_songs
 from .playlist_songs import playlist_songs
 from .search import search
+from .song_comments import song_comments
+from .comment_pages import comment_pages

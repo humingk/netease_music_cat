@@ -6,9 +6,9 @@
 import json
 import config
 from netease.search import search
-from logger import loggler
+from logger_tool import loggler_tool
 
-log = loggler()
+logger = loggler_tool()
 
 
 class user_message:
@@ -33,13 +33,13 @@ class user_message:
             user = json.loads(search_result[1])["result"]["userprofiles"][0]
             print(user)
         else:
-            log.debug("get_user_by_name failed", "user_name:{}".format(user_name))
+            logger.debug("get_user_by_name failed", "user_name:{}".format(user_name))
             return False, []
         self.user_message.append({
             "user_id": user["userId"],
             "user_name": user_name
         })
-        log.debug("get_user_by_name success", "user_name:{},user_id:{}".format(user_name, user["userId"]))
+        logger.debug("get_user_by_name success", "user_name:{},user_id:{}".format(user_name, user["userId"]))
         return True, self.user_message
 
     def get_user_by_id(self, user_id=config.user_id):
