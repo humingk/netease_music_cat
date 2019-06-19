@@ -6,7 +6,7 @@
 import json
 import config
 from netease.search import search
-from logger_tool import loggler_tool
+from my_tools.logger_tool import loggler_tool
 
 logger = loggler_tool()
 

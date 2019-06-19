@@ -7,10 +7,10 @@ import config
 import json
 import sys
 
-from database_pool import database_pool
+from my_tools.database_pool import database_pool
 from netease.first_param import first_param
 from netease.request_data import request_data
-from logger_tool import loggler_tool
+from my_tools.logger_tool import loggler_tool
 
 logger = loggler_tool()
 
@@ -57,7 +57,7 @@ class user_playlists:
         created_playlists_count = 0
         collected_playlists_count = 0
         pool = database_pool()
-        pool.execute("insert into user(user_id) values('{}')".format(user_id))
+        pool.execute("insert into user(user_id) values({})".format(user_id))
         pool.commit()
         while playlist_count < len(json_playlists_data):
 
@@ -122,10 +122,10 @@ class user_playlists:
         }
         self.user_playlists_list.append(playlist)
         pool.execute(
-            "replace into playlist(playlist_id, playlist_name, playlist_type, playlist_play_count) values ('{}','{}',{},{})"
+            "replace into playlist(playlist_id, playlist_name, playlist_type, playlist_play_count) values ({},'{}',{},{})"
                 .format(playlist["playlist_id"], playlist["playlist_name"], playlist["playlist_type"],
                         playlist["playlist_playCount"]))
-        pool.execute("replace into user_playlist(user_id, playlist_id) values('{}','{}')"
+        pool.execute("replace into user_playlist(user_id, playlist_id) values({},{})"
                      .format(user_id, playlist["playlist_id"]))
 
 

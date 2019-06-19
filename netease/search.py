@@ -6,7 +6,7 @@
 import config
 from netease.first_param import first_param
 from netease.request_data import request_data
-from logger_tool import loggler_tool
+from my_tools.logger_tool import loggler_tool
 
 logger = loggler_tool()
 

@@ -126,6 +126,8 @@ song_comments_old_max = 10000
 song_comments_page_limit = 100
 # 抓取评论多线程默认个数
 song_comments_thread_count = 20
+# 给线程池添加任务的时间间隔(s)
+song_comments_thread_thread_inteval_time = 1
 
 # 评论类型
 song_comments_type_default = 0

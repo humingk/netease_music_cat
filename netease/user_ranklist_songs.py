@@ -8,8 +8,8 @@ import config
 import json
 from netease.first_param import first_param
 from netease.request_data import request_data
-from database_pool import database_pool
-from logger_tool import loggler_tool
+from my_tools.database_pool import database_pool
+from my_tools.logger_tool import loggler_tool
 
 logger = loggler_tool()
 
@@ -56,12 +56,12 @@ class user_ranklist_songs:
             return False, []
         song_count = 0
         pool = database_pool()
-        pool.execute("insert into user(user_id) values('{}')".format(user_id))
+        pool.execute("insert into user(user_id) values({})".format(user_id))
         pool.execute(
-            "replace into ranklist(ranklist_id, ranklist_type) values('{}',{})".format(user_id + str(rank_type),
+            "replace into ranklist(ranklist_id, ranklist_type) values({},{})".format(user_id + str(rank_type),
                                                                                        rank_type))
         pool.execute(
-            "replace into user_ranklist(user_id, ranklist_id) values('{}','{}')".format(user_id,
+            "replace into user_ranklist(user_id, ranklist_id) values({},{})".format(user_id,
                                                                                         user_id + str(rank_type)))
         pool.commit()
         while song_count < rank_max and song_count < len(json_data):
@@ -91,11 +91,11 @@ class user_ranklist_songs:
         }
         self.user_ranklist_songs_list.append(song)
         pool.execute(
-            "replace into song(song_id,song_name,song_source,song_source_type,rank_score) values('{}','{}',{},{},{})"
+            "replace into song(song_id,song_name,song_source,song_source_type,rank_score) values({},'{}',{},{},{})"
                 .format(song["song_id"], pymysql.escape_string(song["song_name"]), song["song_source"],
                         song["song_source_type"], song["rank_score"]))
         pool.execute(
-            "replace into song_ranklist(song_id,ranklist_id) values('{}','{}')"
+            "replace into song_ranklist(song_id,ranklist_id) values({},{})"
                 .format(song["song_id"], user_id + str(rank_type)))
 
 

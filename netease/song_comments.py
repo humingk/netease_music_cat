@@ -5,15 +5,13 @@
 # ----------------------
 import json
 import time
-
 import pymysql
-
 import config
-from logger_tool import loggler_tool
-from database_pool import database_pool
+from my_tools.logger_tool import loggler_tool
+from my_tools.database_pool import database_pool
 from netease.first_param import first_param
 from netease.request_data import request_data
-from thread_pool import thread_pool
+from my_tools.thread_pool import thread_pool
 
 logger = loggler_tool()
 
@@ -23,9 +21,6 @@ class song_comments:
     歌曲评论获取类
 
     """
-
-    def __init__(self):
-        self.comments_list = []
 
     def get_song_comments_hot(self, song_id):
         """
@@ -49,25 +44,25 @@ class song_comments:
             return False, []
 
     def get_song_comments_normal(self, song_id, thread_count=config.song_comments_thread_count,
+                                 thread_inteval_time=config.song_comments_thread_thread_inteval_time,
                                  song_comments_new_max=config.song_comments_new_max,
                                  song_comments_old_max=config.song_comments_old_max,
-                                 limit=config.song_comments_page_limit):
+                                 song_comments_page_limit=config.song_comments_page_limit):
         """
         通过song_id获取标准评论
 
         :param song_id: 歌曲id
         :param thread_count: 多线程个数
+        :param thread_inteval_time: 间隔时间
         :param song_comments_new_max: 最新评论最大数,详见config
         :param song_comments_old_max: 最旧评论最大数,详见config
-        :param limit: 每一页获取标准评论数限制
+        :param song_comments_page_limit: 每一页获取标准评论数限制
         """
         # 获取标准评论总数
         content = self.get_song_page_comments(song_id=song_id, offset=0, limit=0, is_get_comment_total=True)
         try:
             if content[0]:
-                comments_count = content[1]
-                logger.info("get_song_comments_total_count success",
-                            "song_id:{},total_count:{}".format(song_id, comments_count))
+                comments_total = content[1]
             else:
                 return False, []
         except Exception as e:
@@ -80,14 +75,29 @@ class song_comments:
         )
         pool.commit()
 
-        # 多线程获取标准评论
-        _thread_pool = thread_pool(20)
-        for page in range(0,1000,100):
-            _thread_pool.add(self.get_song_page_comments,
-                             (song_id, config.song_comments_type_default, page, 100), None)
-            time.sleep(5)
-
-        return self.comments_list
+        # 多线程获取最新评论+最老评论
+        try:
+            _thread_pool = thread_pool(thread_max=thread_count)
+            pages = set(
+                list(range(0, song_comments_new_max, song_comments_page_limit)) +
+                list(range(comments_total,
+                           comments_total - song_comments_old_max if comments_total > song_comments_old_max else 0,
+                           -song_comments_page_limit)))
+            for page in pages:
+                _thread_pool.add(func=self.get_song_page_comments,
+                                 args=(song_id, config.song_comments_type_default, page, 100),
+                                 callback=None)
+                time.sleep(thread_inteval_time)
+            _thread_pool.close()
+            logger.info(
+                "get_song_comments_normal success", "song_id:{},comments_total:{},pages_total:{},page_comments_limit:{}"
+                    .format(song_id, comments_total, len(pages), song_comments_page_limit))
+            return True
+        except Exception as e:
+            logger.error(
+                "get_song_comments_normal failed", "song_id:{},comments_total:{},error:{}"
+                    .format(song_id, comments_total, e))
+            return False
 
     def get_song_page_comments(self, song_id, comment_type=config.song_comments_type_hot, offset=0, limit=0,
                                is_get_comment_total=False):
@@ -129,12 +139,12 @@ class song_comments:
         pool.commit()
         return True, comments_list
 
-    def __add(self, comment_json, pool, comment_type=config.song_comments_type):
+    def __add(self, pool, comment_json, comment_type=config.song_comments_type):
         """
         添加信息
 
-        :param comment_json: 评论内容
         :param pool: 数据库线程池
+        :param comment_json: 评论内容
         :param comment_type: 评论类型
         :return: 评论+用户信息
         """
@@ -149,22 +159,22 @@ class song_comments:
             "user_name": comment_json["user"]["nickname"]
         }
         pool.execute(
-            "insert into comment(comment_id, comment_date,comment_content,comment_type) values('{}',{},'{}',{})"
+            "insert into comment(comment_id, comment_date,comment_content,comment_type) values({},{},'{}',{})"
                 .format(comment["comment_id"], comment["comment_date"],
                         pymysql.escape_string(comment["comment_content"]), comment["comment_type"]))
         pool.execute(
-            "insert into user(user_id, user_name) values('{}','{}')"
+            "insert into user(user_id, user_name) values({},'{}')"
                 .format(user["user_id"], pymysql.escape_string(user["user_name"]))
         )
-        pool.execute(
-            "insert into user_comment(user_id, comment_id) values ('{}','{}')"
+        result = pool.execute(
+            "insert into user_comment(user_id, comment_id) values ({},{})"
                 .format(user["user_id"], comment["comment_id"])
         )
-        pool.commit()
         return {"comment": comment}, {"user": user}
 
 
 if __name__ == '__main__':
     # print(song_comments().get_song_page_comments(config.song_id, comment_type=config.song_comments_type_hot))
     # print(song_comments().get_song_comments_hot(config.song_id))
-    print(song_comments().get_song_comments_normal(config.song_id, 5, 1000, 1000, 100))
+    print(song_comments().get_song_comments_normal(song_id=66476, thread_count=20, song_comments_new_max=200,
+                                                   song_comments_old_max=200, song_comments_page_limit=100))

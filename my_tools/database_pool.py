@@ -7,7 +7,7 @@ import threading
 from DBUtils.PooledDB import PooledDB
 import pymysql
 import config
-from logger_tool import loggler_tool
+from my_tools.logger_tool import loggler_tool
 
 logger = loggler_tool()
 
@@ -44,7 +44,7 @@ class database_pool:
             # ping MySQL服务端，检查是否服务可用
             # 如：0 = None = never, 1 = default = whenever it is requested,
             # 2 = when a cursor is created, 4 = when a query is executed, 7 = always
-            ping=0,
+            ping=1,
             host=database_host,
             port=database_port,
             user=database_user_name,
@@ -83,18 +83,20 @@ class database_pool:
         execute语句
 
         :param sql: sql语句
-        :return:
+        :return: 执行状态
         """
         try:
             self.conn.cursor().execute(sql)
             # logger.debug("database execute success", "sql:{}".format(sql))
             return True
         except pymysql.err.IntegrityError as e:
-            logger.warning("database execute duplicate", "sql:{},error:{}".format(sql, e))
-            return True
-        except pymysql.err.DataError as e:
-            logger.warning("database execute too long", "sql:{},error:{}".format(sql, e))
-            return False
+            # 键重复
+            if e.args[0] == 1062:
+                logger.warning("database execute duplicate", "sql:{},error:{}".format(sql, e))
+                return False
+            else:
+                logger.error("database execute failed", "sql:{},error:{}".format(sql, e))
+                return False
         except Exception as e:
             logger.error("database execute failed", "sql:{},error:{}".format(sql, e))
             return False
@@ -110,8 +112,9 @@ class database_pool:
 
 
 if __name__ == '__main__':
-    for i in range(20):
-        pool = database_pool()
-        pool.execute("insert into user(user_id,user_name) values(474252223,'IsolationTom') ")
-        pool.commit()
-        print(id(pool))
+    # for i in range(20):
+    pool = database_pool()
+    pool.execute("insert into user(user_id,user_name) values(474252223,'IsolationTom') ")
+    pool.execute("insert into user_comment(user_id, comment_id) values (111,222)")
+    pool.commit()
+    print(id(pool))

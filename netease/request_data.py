@@ -6,7 +6,7 @@
 import requests
 from netease.form_data import form_data
 import config
-from logger_tool import loggler_tool
+from my_tools.logger_tool import loggler_tool
 
 logger = loggler_tool()
 

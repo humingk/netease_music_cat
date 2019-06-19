@@ -6,7 +6,7 @@
 import time
 from threading import Thread, currentThread
 from queue import Queue
-from logger_tool import loggler_tool
+from my_tools.logger_tool import loggler_tool
 
 logger = loggler_tool()
 

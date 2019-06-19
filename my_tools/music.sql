@@ -1,10 +1,11 @@
+DROP DATABASE IF EXISTS netease_music;
 CREATE DATABASE IF NOT EXISTS netease_music DEFAULT CHARSET utf8mb4 COLLATE utf8mb4_general_ci;
-
+use netease_music;
 
 CREATE TABLE user
 (
-    user_id   char(20) NOT NULL,
-    user_name char(20) NOT NULL default "",
+    user_id   char(20)     NOT NULL,
+    user_name varchar(100) NOT NULL default "",
     primary key (user_id),
     index (user_name)
 ) ENGINE = InnoDB
@@ -102,7 +103,7 @@ CREATE TABLE comment
     comment_id      char(20)     NOT NULL,
     comment_type    int(1)       NOT NULL default 0,
     comment_date    char(20)     NOT NULL default "",
-    comment_content varchar(200) NOT NULL default "",
+    comment_content varchar(500) NOT NULL default "",
     primary key (comment_id),
     index comment_comtent (comment_content)
 ) ENGINE = INNODB
