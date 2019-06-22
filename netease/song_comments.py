@@ -5,7 +5,6 @@
 # ----------------------
 import json
 import time
-import pymysql
 import config
 from my_tools.logger_tool import loggler_tool
 from my_tools.database_pool import database_pool
@@ -28,12 +27,18 @@ class song_comments:
 
         :param song_id: 歌曲id
         """
-        # 存歌曲信息
+        # 获取标准评论总数
+        comments_total = 0
+        content = self.get_song_page_comments(song_id=song_id, offset=0, limit=0, is_get_comment_total=True)
+        try:
+            if content[0]:
+                comments_total = content[1]
+        except Exception as e:
+            logger.error("get_song_comments_total_count failed", "song_id:{},error:{}".format(song_id, e))
         pool = database_pool()
-        pool.execute(
-            "insert into song(song_id) values ({})".format(song_id)
-        )
+        pool.insert_song(song_id=song_id, song_name="", song_comment_count=comments_total)
         pool.commit()
+
         # 获取热门评论
         content = self.get_song_page_comments(song_id=song_id, offset=0, limit=0)
         if content[0]:
@@ -68,13 +73,10 @@ class song_comments:
         except Exception as e:
             logger.error("get_song_comments_total_count failed", "song_id:{},error:{}".format(song_id, e))
             return False, []
+        # 歌曲存储
         pool = database_pool()
-        # 存歌曲信息
-        pool.execute(
-            "insert into song(song_id) values ({})".format(song_id)
-        )
+        pool.insert_song(song_id=song_id, song_name="", song_comment_count=comments_total)
         pool.commit()
-
         # 多线程获取最新评论+最老评论
         try:
             _thread_pool = thread_pool(thread_max=thread_count)
@@ -135,16 +137,19 @@ class song_comments:
         comments_list = []
         for comment_json in json_data:
             comments_list.append(
-                self.__add(comment_json=comment_json, pool=pool, comment_type=config.song_comments_type_hot))
+                self.__add(song_id=song_id, comment_json=comment_json, pool=pool, comments_list=comments_list,
+                           comment_type=config.song_comments_type_hot))
         pool.commit()
         return True, comments_list
 
-    def __add(self, pool, comment_json, comment_type=config.song_comments_type):
+    def __add(self, song_id, pool, comment_json, comments_list, comment_type=config.song_comments_type):
         """
         添加信息
 
+        :param song_id: 歌曲id
         :param pool: 数据库线程池
         :param comment_json: 评论内容
+        :param comments_list: 返回数据
         :param comment_type: 评论类型
         :return: 评论+用户信息
         """
@@ -152,29 +157,24 @@ class song_comments:
             "comment_id": comment_json["commentId"],
             "comment_date": comment_json["time"],
             "comment_content": comment_json["content"],
-            "comment_type": comment_type
+            "comment_type": comment_type,
+            "comment_like_count": comment_json["likedCount"]
         }
         user = {
             "user_id": comment_json["user"]["userId"],
             "user_name": comment_json["user"]["nickname"]
         }
-        pool.execute(
-            "insert into comment(comment_id, comment_date,comment_content,comment_type) values({},{},'{}',{})"
-                .format(comment["comment_id"], comment["comment_date"],
-                        pymysql.escape_string(comment["comment_content"]), comment["comment_type"]))
-        pool.execute(
-            "insert into user(user_id, user_name) values({},'{}')"
-                .format(user["user_id"], pymysql.escape_string(user["user_name"]))
-        )
-        result = pool.execute(
-            "insert into user_comment(user_id, comment_id) values ({},{})"
-                .format(user["user_id"], comment["comment_id"])
-        )
-        return {"comment": comment}, {"user": user}
+        comments_list.append({"comment": comment, "user": user})
+        pool.insert_user(user_id=user["user_id"], user_name=user["user_name"])
+        pool.insert_comment(comment_id=comment["comment_id"], comment_type=comment["comment_type"],
+                            comment_date=comment["comment_date"], comment_content=comment["comment_content"],
+                            comment_like_count=comment["comment_like_count"])
+        pool.insert_song_comment(song_id=song_id, comment_id=comment["comment_id"])
+        pool.insert_user_comment(user_id=user["user_id"], comment_id=comment["comment_id"])
 
 
 if __name__ == '__main__':
-    # print(song_comments().get_song_page_comments(config.song_id, comment_type=config.song_comments_type_hot))
+    print(song_comments().get_song_page_comments(config.song_id, comment_type=config.song_comments_type_hot))
     # print(song_comments().get_song_comments_hot(config.song_id))
-    print(song_comments().get_song_comments_normal(song_id=66476, thread_count=20, song_comments_new_max=200,
-                                                   song_comments_old_max=200, song_comments_page_limit=100))
+    # print(song_comments().get_song_comments_normal(song_id=66476, thread_count=20, song_comments_new_max=200,
+    #                                                song_comments_old_max=200, song_comments_page_limit=100))

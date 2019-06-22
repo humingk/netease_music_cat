@@ -6,7 +6,6 @@
 import config
 import json
 import sys
-
 from my_tools.database_pool import database_pool
 from netease.first_param import first_param
 from netease.request_data import request_data
@@ -20,10 +19,6 @@ class user_playlists:
     用户歌单获取类
 
     """
-
-    def __init__(self):
-        # 用户歌单的id列表
-        self.user_playlists_list = []
 
     def get_user_playlists(self, user_id=config.user_id, created_playlists_max=config.created_playlists_max,
                            collected_playlists_max=config.collected_playlists_max,
@@ -56,14 +51,16 @@ class user_playlists:
         playlist_count = 0
         created_playlists_count = 0
         collected_playlists_count = 0
+        user_playlists_list = []
         pool = database_pool()
-        pool.execute("insert into user(user_id) values({})".format(user_id))
+        pool.insert_user(user_id=user_id)
         pool.commit()
         while playlist_count < len(json_playlists_data):
 
             # 爬取”用户喜欢的音乐“这一个歌单
             if is_playlists_default:
                 self.__add(user_id=user_id, playlist_count=playlist_count, data=json_playlists_data,
+                           user_playlists_list=user_playlists_list,
                            playlist_type=config.default_playlist, pool=pool)
                 playlist_count += 1
                 is_playlists_default = False
@@ -79,6 +76,7 @@ class user_playlists:
                 elif str(json_playlists_data[playlist_count]["creator"]['userId']) == str(user_id):
                     if created_playlists_count < created_playlists_max:
                         self.__add(user_id=user_id, playlist_count=playlist_count, data=json_playlists_data,
+                                   user_playlists_list=user_playlists_list,
                                    playlist_type=config.created_playlist, pool=pool)
                         created_playlists_count += 1
                     playlist_count += 1
@@ -92,6 +90,7 @@ class user_playlists:
                 if str(json_playlists_data[playlist_count]["creator"]['userId']) != str(user_id):
                     if collected_playlists_count < collected_playlists_max:
                         self.__add(user_id=user_id, playlist_count=playlist_count, data=json_playlists_data,
+                                   user_playlists_list=user_playlists_list,
                                    playlist_type=config.collected_playlist, pool=pool)
                         collected_playlists_count += 1
                 # 若此处出现不是用户收藏的歌单情况，说明用户创建歌单没有完全爬取，继续循环
@@ -100,11 +99,11 @@ class user_playlists:
             break
         pool.commit()
         logger.debug("get user_playlists success",
-                  "user_id:{},playlist_sum:{},playlist_created_sum:{},playlist_collected_sum:{}"
-                  .format(user_id, playlist_count, created_playlists_count, collected_playlists_count))
-        return True, self.user_playlists_list
+                     "user_id:{},playlist_sum:{},playlist_created_sum:{},playlist_collected_sum:{}"
+                     .format(user_id, playlist_count, created_playlists_count, collected_playlists_count))
+        return True, user_playlists_list
 
-    def __add(self, user_id, playlist_count, data, pool, playlist_type=config.playlist_type):
+    def __add(self, user_id, playlist_count, data, pool, user_playlists_list, playlist_type=config.playlist_type):
         """
         添加到用户歌单列表
 
@@ -112,21 +111,22 @@ class user_playlists:
         :param playlist_count: 歌单列表位移
         :param data: 待添加数据
         :param playlist_type: 歌单类型
+        :param user_playlists_list: 返回结果
         :param pool: 数据库连接池
         """
         playlist = {
             "playlist_id": data[playlist_count]["id"],
             "playlist_name": data[playlist_count]["name"],
-            "playlist_type": playlist_type,
-            "playlist_playCount": data[playlist_count]["playCount"]
+            "playlist_songs_total": data[playlist_count]["trackCount"],
+            "playlist_play_count": data[playlist_count]["playCount"],
+            "playlist_update_date": data[playlist_count]["updateTime"]
         }
-        self.user_playlists_list.append(playlist)
-        pool.execute(
-            "replace into playlist(playlist_id, playlist_name, playlist_type, playlist_play_count) values ({},'{}',{},{})"
-                .format(playlist["playlist_id"], playlist["playlist_name"], playlist["playlist_type"],
-                        playlist["playlist_playCount"]))
-        pool.execute("replace into user_playlist(user_id, playlist_id) values({},{})"
-                     .format(user_id, playlist["playlist_id"]))
+        user_playlists_list.append(playlist)
+        pool.insert_playlist(playlist_id=playlist["playlist_id"], playlist_name=playlist["playlist_name"],
+                             playlist_songs_total=playlist["playlist_songs_total"],
+                             playlist_play_count=playlist["playlist_play_count"],
+                             playlist_update_date=playlist["playlist_update_date"])
+        pool.insert_user_playlist(user_id=user_id, playlist_id=playlist["playlist_id"], playlist_type=playlist_type)
 
 
 if __name__ == "__main__":

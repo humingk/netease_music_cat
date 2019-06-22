@@ -116,11 +116,12 @@ collected_songs_max = 20
 
 # 歌曲评论 ------------------------------
 # 每首歌的最大评论获取数(目前只能获取时间正序和时间倒序各10000条)
+# 每首歌的最大评论获取数(目前只能获取时间正序和时间倒序各5000条)
 
 # 最新评论最大
-song_comments_new_max = 10000
+song_comments_new_max = 5000
 # 最旧评论最大
-song_comments_old_max = 10000
+song_comments_old_max = 5000
 
 # 评论页数限制默认值
 song_comments_page_limit = 100
