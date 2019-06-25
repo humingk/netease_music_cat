@@ -4,9 +4,6 @@
 # author: humingk
 # ----------------------
 import json
-
-import pymysql
-
 import config
 from my_tools.database_pool import database_pool
 from netease.user_playlists import user_playlists
@@ -22,10 +19,6 @@ class playlist_songs:
     歌单歌曲获取类
 
     """
-
-    def __init__(self):
-        # 歌曲列表
-        self.playlist_songs_list = []
 
     def get_playlist_songs_by_user_id(self, user_id=config.user_id, default_songs_max=config.default_songs_max,
                                       created_songs_max=config.created_songs_max,
@@ -61,6 +54,7 @@ class playlist_songs:
             user_playlists_list = content[1]
         else:
             return False, []
+        playlist_songs_list = []
         for playlist in user_playlists_list:
             # 获取不同类型歌单的歌曲最大数
             playlist_songs_max = config.playlist_songs_max
@@ -75,8 +69,8 @@ class playlist_songs:
                                                    playlist_type=playlist_type, playlist_songs_max=playlist_songs_max)
 
         logger.debug("playlist_songs",
-                  "get user-{}'s playlists-songs:songs-total-len-{}".format(user_id, len(self.playlist_songs_list)))
-        return True, self.playlist_songs_list
+                     "get user-{}'s playlists-songs:songs-total-len-{}".format(user_id, len(playlist_songs_list)))
+        return True, playlist_songs_list
 
     def get_playlist_songs_by_playlist_id(self, playlist_id=config.playlist_id, playlist_type=config.playlist_type,
                                           playlist_songs_max=config.playlist_songs_max):
@@ -93,25 +87,27 @@ class playlist_songs:
         try:
             if content[0]:
                 songs = json.loads(content[1])["playlist"]["tracks"]
+                print(songs)
             else:
                 return False, []
         except Exception as e:
             logger.error("get_playlist_songs failed", "playlist_id:{},error:{}".format(playlist_id, e))
             return False, []
         song_count = 0
+        playlist_songs_list = []
         pool = database_pool()
-        pool.execute("insert into playlist(playlist_id) values({})".format(playlist_id))
+        pool.insert_playlist(playlist_id=playlist_id)
         pool.commit()
         while song_count < playlist_songs_max and song_count < len(songs):
-            self.__add(songs[song_count], playlist_id, playlist_type, pool)
+            self.__add(songs[song_count], playlist_id, playlist_type, pool, playlist_songs_list)
             song_count += 1
         pool.commit()
         logger.debug("get_playlist_songs_by_playlist_id success",
-                  "playlist_id:{},playlist_type:{},playlist_songs_count:{}"
-                  .format(playlist_id, playlist_type, song_count))
-        return True, self.playlist_songs_list
+                     "playlist_id:{},playlist_type:{},playlist_songs_count:{}"
+                     .format(playlist_id, playlist_type, song_count))
+        return True, playlist_songs_list
 
-    def __add(self, song, playlist_id, playlist_type, pool):
+    def __add(self, song, playlist_id, playlist_type, pool, playlist_songs_list):
         """
         添加歌曲
 
@@ -126,15 +122,19 @@ class playlist_songs:
             "song_source": config.song_source_playlist,
             "song_source_type": playlist_type,
         }
-        self.playlist_songs_list.append(song)
-        pool.execute(
-            "replace into song(song_id,song_name,song_source,song_source_type) values({},'{}',{},{})"
-                .format(song["song_id"], pymysql.escape_string(song["song_name"]), song["song_source"],
-                        song["song_source_type"]))
-        pool.execute(
-            "replace into song_playlist(song_id, playlist_id) values({},{})".format(song["song_id"], playlist_id))
+        artist = {
+            "artist_id": song["ar"]["id"],
+            "artist_name": song["ar"]["name"],
+            "artist_score": 0
+        }
+        playlist_songs_list.append({"song": song, "artist": artist})
+        pool.insert_song(song_id=song["song_id"], song_name=song["song_name"])
+        pool.insert_artist(artist_id=artist["artist_id"], artist_name=artist["artist_name"],
+                           artist_score=artist["artist_score"])
+        pool.insert_song_playlist(song_id=song["song_id"], playlist_id=playlist_id, playlist_type=playlist_type)
+        pool.insert_artist_song(artist_id=artist["artist_id"], song_id=song["song_id"])
 
 
 if __name__ == "__main__":
-    # print(playlist_songs().get_playlist_songs_by_playlist_id())
-    print(playlist_songs().get_playlist_songs_by_user_id())
+    print(playlist_songs().get_playlist_songs_by_playlist_id())
+    # print(playlist_songs().get_playlist_songs_by_user_id())

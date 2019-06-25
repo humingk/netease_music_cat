@@ -17,9 +17,6 @@ class user_message:
 
     """
 
-    def __init__(self):
-        self.user_message = []
-
     def get_user_by_name(self, user_name=config.user_name):
         """
         通过用户昵称获取用户id
@@ -29,18 +26,19 @@ class user_message:
         :return: 用户信息
         """
         search_result = search().get_search(search_keyword=user_name, search_type=config.search_type_user)
+        user_message = []
         if search_result[0]:
             user = json.loads(search_result[1])["result"]["userprofiles"][0]
             print(user)
         else:
             logger.debug("get_user_by_name failed", "user_name:{}".format(user_name))
             return False, []
-        self.user_message.append({
+        user_message.append({
             "user_id": user["userId"],
             "user_name": user_name
         })
         logger.debug("get_user_by_name success", "user_name:{},user_id:{}".format(user_name, user["userId"]))
-        return True, self.user_message
+        return True, user_message
 
     def get_user_by_id(self, user_id=config.user_id):
         pass

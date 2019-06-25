@@ -3,7 +3,7 @@
 
 # author: humingk
 # ----------------------
-import pymysql
+import time
 import config
 import json
 from netease.first_param import first_param
@@ -20,13 +20,9 @@ class user_ranklist_songs:
 
     """
 
-    def __init__(self):
-        # 排行榜歌曲列表
-        self.user_ranklist_songs_list = []
-
-    def get_ranklist_songs(self, user_id=config.user_id, rank_type=config.rank_type, rank_max=config.rank_max):
+    def get_user_ranklist_songs(self, user_id=config.user_id, rank_type=config.rank_type, rank_max=config.rank_max):
         """
-         获取排行榜歌曲列表
+         获取某用户排行榜歌曲列表
 
         :param user_id: 用户id
         :param rank_max: 排行榜歌曲获取最大数
@@ -47,58 +43,60 @@ class user_ranklist_songs:
                 return False, []
         except KeyError as e:
             logger.error(
-                "get_ranklist_songs failed, Maybe the guy's ranklist is hidden,can you see it in the webpage ?",
+                "get_user_ranklist_songs failed, Maybe the guy's ranklist is hidden,can you see it in the webpage ?",
                 "user_id:{},rank_type:{},error:{}".format(user_id, rank_type, e))
             return False, []
         except Exception as e:
-            logger.error("get_ranklist_songs failed", "user_id:{},rank_type:{},error:{}"
+            logger.error("get_user_ranklist_songs failed", "user_id:{},rank_type:{},error:{}"
                          .format(user_id, rank_type, e))
             return False, []
         song_count = 0
+        ranklist_id = user_id + "r" + str(rank_type)
         pool = database_pool()
-        pool.execute("insert into user(user_id) values({})".format(user_id))
-        pool.execute(
-            "replace into ranklist(ranklist_id, ranklist_type) values({},{})".format(user_id + str(rank_type),
-                                                                                       rank_type))
-        pool.execute(
-            "replace into user_ranklist(user_id, ranklist_id) values({},{})".format(user_id,
-                                                                                        user_id + str(rank_type)))
+        pool.insert_user(user_id=user_id)
+        pool.insert_ranklist(ranklist_id=ranklist_id, ranklist_type=rank_type,
+                             ranklist_date=int(round(time.time() * 1000)))
+        pool.insert_user_ranklist(user_id=user_id, ranklist_id=ranklist_id)
         pool.commit()
+        user_ranklist_songs = []
         while song_count < rank_max and song_count < len(json_data):
-            self.__add(user_id, song_count, rank_type, json_data, pool)
+            self.__add(user_id, song_count, rank_type, ranklist_id, json_data, pool, user_ranklist_songs)
             song_count += 1
-        logger.debug("get_ranklist_songs success", "user_id:{},rank_type:{},rank_count:{}"
+        logger.debug("get_user_ranklist_songs success", "user_id:{},rank_type:{},rank_count:{}"
                      .format(user_id, rank_type, song_count))
         pool.commit()
-        return True, self.user_ranklist_songs_list
+        return True, user_ranklist_songs
 
-    def __add(self, user_id, song_count, rank_type, json_data, pool):
+    def __add(self, user_id, song_count, rank_type, ranklist_id, json_data, pool, user_ranklist_songs):
         """
         添加到排行榜歌曲列表
 
         :param user_id: 用户id
         :param song_count: 排行榜歌曲位移
         :param rank_type: 排行榜种类
+        :param ranklist_id: 排行榜id
         :param json_data: 待添加的数据
         :param pool: 数据库连接池
+        :param user_ranklist_songs: 返回的数据
         """
         song = {
             "song_id": json_data[song_count]["song"]["id"],
             "song_name": json_data[song_count]["song"]["name"],
-            "song_source": config.song_source_rank,
-            "song_source_type": rank_type,
-            "rank_score": json_data[song_count]["score"]
+            "song_score": json_data[song_count]["score"]
         }
-        self.user_ranklist_songs_list.append(song)
-        pool.execute(
-            "replace into song(song_id,song_name,song_source,song_source_type,rank_score) values({},'{}',{},{},{})"
-                .format(song["song_id"], pymysql.escape_string(song["song_name"]), song["song_source"],
-                        song["song_source_type"], song["rank_score"]))
-        pool.execute(
-            "replace into song_ranklist(song_id,ranklist_id) values({},{})"
-                .format(song["song_id"], user_id + str(rank_type)))
+        artist = {
+            "artist_id": json_data[song_count]["song"]["song"]["artist"]["id"],
+            "artist_name": json_data[song_count]["song"]["song"]["artist"]["name"],
+            "artist_score": json_data[song_count]["song"]["song"]["artist"]["score"]
+        }
+        user_ranklist_songs.append({"song": song, "artist": artist})
+        pool.insert_song(song_id=song["song_id"], song_name=song["song_name"])
+        pool.insert_artist(artist_id=artist["artist_id"], artist_name=artist["artist_name"],
+                           artist_score=artist["artist_score"])
+        pool.insert_song_ranklist(song_id=song["song_id"], ranklist_id=ranklist_id, song_score=song["song_score"])
+        pool.insert_artist_song(artist_id=artist["artist_id"], song_id=song["song_id"])
 
 
 if __name__ == "__main__":
-    print(user_ranklist_songs().get_ranklist_songs(user_id=config.user_id, rank_type=config.rank_type_week))
-    print(user_ranklist_songs().get_ranklist_songs(user_id=config.user_id, rank_type=config.rank_type_all))
+    # print(user_ranklist_songs().get_user_ranklist_songs(user_id=config.user_id, rank_type=config.rank_type_week))
+    print(user_ranklist_songs().get_user_ranklist_songs(user_id=config.user_id, rank_type=config.rank_type_all))
