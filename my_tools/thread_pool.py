@@ -87,8 +87,8 @@ class thread_pool:
             except Exception as e:
                 result = None
                 status = False
-                logger.error("Thread pool exexute task failed",
-                             "Thread_name:{},error:{}".format(current_thread_name, e))
+                logger.error("Thread pool execute task failed",
+                             "Thread_name:{},args:{},error:{}".format(current_thread_name, args, e))
             # 执行回调函数
             if callback is not None:
                 try:

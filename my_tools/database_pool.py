@@ -26,15 +26,15 @@ class database_pool:
             # 使用数据库模块
             creator=pymysql,
             # 数据库最大连接数
-            maxconnections=10,
+            maxconnections=100,
             # 初始化时，链接池中至少创建的空闲的链接
-            mincached=5,
+            mincached=20,
             # 初始化时，链接池中至多创建的空闲的链接
-            maxcached=10,
+            maxcached=20,
             # 链接池中最多共享的链接数量
             # PS: 无用，因为pymysql和MySQLdb等模块的 threadsafety都为1
             # 所有值无论设置为多少，_maxcached永远为0，所以永远是所有链接都共享
-            maxshared=3,
+            maxshared=100,
             # 连接池中如果没有可用连接后，是否阻塞等待
             blocking=True,
             # 一个链接最多被重复使用的次数，None表示无限制
@@ -124,10 +124,22 @@ class database_pool:
                 .format(ranklist_id, ranklist_type, ranklist_date)
         )
 
-    def insert_song(self, song_id, song_name="", song_comment_count=0):
+    def insert_song(self, song_id, song_name=""):
         self.execute(
-            "insert into song(song_id,song_name,song_comment_count) values ({},'{}',{})"
-                .format(song_id, pymysql.escape_string(song_name), song_comment_count)
+            "insert into song(song_id,song_name) values ({},'{}')"
+                .format(song_id, pymysql.escape_string(song_name))
+        )
+
+    def update_song_hot_comment_count(self, song_id, song_hot_comment_count=0):
+        self.execute(
+            "update song set song_hot_comment_count={} where song_id={}"
+                .format(song_hot_comment_count, song_id)
+        )
+
+    def update_song_default_comment_count(self, song_id, song_default_comment_count=0):
+        self.execute(
+            "update song set song_default_comment_count={} where song_id={}"
+                .format(song_default_comment_count, song_id)
         )
 
     def insert_user_ranklist(self, user_id, ranklist_id):

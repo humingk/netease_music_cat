@@ -3,6 +3,8 @@
 
 # author: humingk
 # ----------------------
+import json
+
 import config
 
 
@@ -12,38 +14,33 @@ class first_param:
 
     """
 
-    def get_first_param(self, param_type, user_id=config.user_id, search_keywords="",
-                        search_type=config.search_type):
-        """
-        获取第一个参数
-
-        :param param_type: 获取参数类型,详见config
-        :param user_id: 用户id（可选）
-        :param search_keywords: 搜索关键字（可选）
-        :param search_type: 搜索类型（可选），详见config
-        :return: status:是否成功获取
-        :return:请求参数
-        """
-        if param_type == config.aes_param_comment:
-            return True, self.get_first_param_comment()
-        elif param_type == config.aes_param_ranklist:
-            return True, self.get_first_param_ranklist(user_id)
-        elif param_type == config.aes_param_search:
-            return True, self.get_first_param_search(search_keywords=search_keywords, search_type=search_type)
-        else:
-            return False, ""
-
-    def get_first_param_comment(self, offset=config.aes_offset, limit=config.song_comments_page_limit):
+    def get_first_param_weapi_comment(self, offset=config.aes_offset, limit=config.song_comments_page_limit):
         """
         歌曲评论参数
+        weapi
 
-        :param total: 目前暂时没发现影响，true or false
         :param offset: 偏移量，默认0
         :param limit:  返回的评论数每一页评论个数限制
         :return: status:是否成功获取
         :return: 请求参数
         """
-        return True, """{{rid:"{}",offset:"{}",limit:"{}"}}""".format("", offset, limit, "")
+        return True, """{{rid:"{}",offset:"{}",limit:"{}"}}""".format('', offset, limit)
+
+    def get_first_param_eapi_comment(self, offset=config.aes_offset, limit=config.song_comments_page_limit):
+        """
+        歌曲热门评论参数
+        eapi
+
+        :param offset: 偏移量，默认0
+        :param limit:  返回的评论数每一页评论个数限制
+        :return: status:是否成功获取
+        :return: 请求参数
+        """
+        params = config.eapi_params
+        params['rid'] = ''
+        params['offset'] = offset
+        params['limit'] = limit
+        return True, json.dumps(params, separators=(',', ':'))
 
     def get_first_param_ranklist(self, user_id=config.user_id, rank_type=config.rank_type):
         """
@@ -98,7 +95,8 @@ class first_param:
 
 if __name__ == '__main__':
     r = first_param()
-    print(r.get_first_param_comment())
     print(r.get_first_param_ranklist())
     print(r.get_first_param_user_playlists())
     print(r.get_first_param_search("test", 1002))
+    print(r.get_first_param_weapi_comment(offset=0, limit=15))
+    print(r.get_first_param_eapi_comment(offset=0, limit=15))

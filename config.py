@@ -1,6 +1,8 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
+import json
 import os
+import random
 import sys
 import logging
 
@@ -122,6 +124,8 @@ collected_songs_max = 20
 song_comments_new_max = 5000
 # 最旧评论最大
 song_comments_old_max = 5000
+# 热门评论限制数(-1表示无限制)
+song_comments_hot_max = -1
 
 # 评论页数限制默认值
 song_comments_page_limit = 100
@@ -144,12 +148,29 @@ host = "music.163.com"
 language = "zh-CN,zh;q=0.9,en;q=0.8"
 accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8"
 
+# 普通请求头
 user_headers = {
     "User-Agent": user_agent,
     "Host": host,
     "Accept": accept,
     "Referer": base_url,
     "Accept-Language": language
+}
+
+# 为eapi添加的请求头
+user_headers_eapi = {
+    'os': 'osx',
+    'appver': '2.5.3',
+    # 'requestId': str(random.randint(10000000, 99999999)),
+    'requestId': 66178368,
+    'clientSign': '',
+}
+
+# eapi的请求参数（eapi公共）
+eapi_params = {
+    'verifyId': 1,
+    'os': 'OSX',
+    'header': json.dumps(user_headers_eapi, separators=(',', ':'))
 }
 
 # 用于测试的歌曲id
@@ -226,9 +247,17 @@ aes_param_search = 3
 # 默认请求类型
 aes_first_param_type = aes_param_error
 
+# api类型
+api_weapi = 0
+api_eapi = 1
+api_type = api_weapi
+
 second_param = "010001"
 third_param = "00e0b509f6259df8642dbc35662901477df22677ec152b5ff68ace615bb7b725152b3ab17a876aea8a5aa76d2e417629ec4ee341f56135fccf695280104e0312ecbda92557c93870114af6c9d05c4f7f0c3685b7a46bee255932575cce10b424d813cfe4875d3e82047b97ddef52741d546b8e289dc6935b3ece0462db0a22b8e7"
 forth_param = "0CoJUm6Qyw8W8jud"
+
+# eapikey
+eapikey = "e82ckenh8dichen8"
 
 # 用于获取params的两次AES加密Key
 first_key = forth_param
@@ -272,3 +301,47 @@ def get_comments_url(song_id):
     :return: 歌曲评论url
     """
     return "http://music.163.com/weapi/v1/resource/comments/R_SO_4_{}".format(song_id)
+
+
+def get_comments_default_url(song_id):
+    """
+    歌曲普通评论
+    url+歌曲id
+
+    :param song_id: 歌曲id
+    :return: 歌曲评论url
+    """
+    return "http://music.163.com/eapi/v1/resource/comments/R_SO_4_{}".format(song_id)
+
+
+def get_comment_default_url_for_eapi_param(song_id):
+    """
+    歌曲普通评论
+    eapi的param中url取值
+
+    :param song_id: 歌曲id
+    :return:
+    """
+    return "/api/v1/resource/comments/R_SO_4_{}".format(song_id)
+
+
+def get_comments_hot_url(song_id):
+    """
+    歌曲热门评论
+    url+歌曲id
+
+    :param song_id: 歌曲id
+    :return: 歌曲评论url
+    """
+    return "http://music.163.com/eapi/v1/resource/hotcomments/R_SO_4_{}".format(song_id)
+
+
+def get_comment_hot_url_for_eapi_param(song_id):
+    """
+    歌曲热门评论
+    eapi的param中url取值
+
+    :param song_id: 歌曲id
+    :return:
+    """
+    return "/api/v1/resource/hotcomments/R_SO_4_{}".format(song_id)

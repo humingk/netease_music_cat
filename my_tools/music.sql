@@ -49,12 +49,14 @@ CREATE TABLE artist
 
 CREATE TABLE song
 (
-    song_id            char(20)     NOT NULL,
-    song_name          varchar(100) NOT NULL default "",
-    song_comment_count int          NOT NULL default 0,
+    song_id                    char(20)     NOT NULL,
+    song_name                  varchar(100) NOT NULL default "",
+    song_hot_comment_count     int          NOT NULL default 0,
+    song_default_comment_count int          NOT NULL default 0,
     primary key (song_id),
     index song_name (song_name),
-    index song_comment_count (song_comment_count)
+    index song_hot_comment_count (song_hot_comment_count),
+    index song_default_comment_count (song_default_comment_count)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
