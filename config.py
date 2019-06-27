@@ -76,8 +76,11 @@ song_source_type = song_source_default
 
 # 歌单类型
 normal_playlist = 4
+# 用户喜欢的音乐歌单
 default_playlist = 5
+# 用户创建的歌单
 created_playlist = 6
+# 用户收藏的歌单
 collected_playlist = 7
 
 # 标准歌单默认类型
@@ -161,8 +164,7 @@ user_headers = {
 user_headers_eapi = {
     'os': 'osx',
     'appver': '2.5.3',
-    # 'requestId': str(random.randint(10000000, 99999999)),
-    'requestId': 66178368,
+    'requestId': str(random.randint(10000000, 99999999)),
     'clientSign': '',
 }
 

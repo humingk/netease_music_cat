@@ -41,7 +41,7 @@ class request_data:
             response = None
             status = False
             logger.error("get_request_data failed",
-                         "url:{} ,first_param:{},proxies:{},error:{}".format(url, first_param, proxies, e))
+                         "url:{} ,first_param:{},proxies:{},error_type:{},error:{}".format(url, first_param, proxies, type(e),e))
         return status, response
 
 

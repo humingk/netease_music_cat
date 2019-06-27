@@ -5,7 +5,7 @@
 # ----------------------
 import json
 import config
-from my_tools.database_pool import database_pool
+from my_tools.database_tool import database_pool
 from netease.user_playlists import user_playlists
 from netease.first_param import first_param
 from netease.request_data import request_data
@@ -91,7 +91,7 @@ class playlist_songs:
             else:
                 return False, []
         except Exception as e:
-            logger.error("get_playlist_songs failed", "playlist_id:{},error:{}".format(playlist_id, e))
+            logger.error("get_playlist_songs failed", "playlist_id:{},error_type:{},error:{}".format(playlist_id,type(e), e))
             return False, []
         song_count = 0
         playlist_songs_list = []

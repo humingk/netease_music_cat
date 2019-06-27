@@ -8,7 +8,7 @@ import config
 import json
 from netease.first_param import first_param
 from netease.request_data import request_data
-from my_tools.database_pool import database_pool
+from my_tools.database_tool import database_pool
 from my_tools.logger_tool import loggler_tool
 
 logger = loggler_tool()
@@ -44,7 +44,7 @@ class user_ranklist_songs:
         except KeyError as e:
             logger.error(
                 "get_user_ranklist_songs failed, Maybe the guy's ranklist is hidden,can you see it in the webpage ?",
-                "user_id:{},rank_type:{},error:{}".format(user_id, rank_type, e))
+                "user_id:{},rank_type:{},error_type:{},error:{}".format(user_id, rank_type, type(e), e))
             return False, []
         except Exception as e:
             logger.error("get_user_ranklist_songs failed", "user_id:{},rank_type:{},error:{}"

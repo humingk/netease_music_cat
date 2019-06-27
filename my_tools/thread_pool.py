@@ -17,6 +17,7 @@ stop_task = object()
 class thread_pool:
     """
     线程池类
+    关键错误：出现死锁，待解决
 
     """
 
@@ -81,21 +82,24 @@ class thread_pool:
         while task != stop_task:
             func, args, callback = task
             # 执行任务
-            try:
-                result = func(*args)
-                status = True
-            except Exception as e:
-                result = None
-                status = False
-                logger.error("Thread pool execute task failed",
-                             "Thread_name:{},args:{},error:{}".format(current_thread_name, args, e))
+            result = func(*args)
+            status = True
+            # try:
+            #     result = func(*args)
+            #     status = True
+            # except Exception as e:
+            #     result = None
+            #     status = False
+            #     logger.error("Thread pool execute task failed",
+            #                  "Thread_name:{},func:{},args:{},error_type:{},error:{}".format(current_thread_name,func, args,type(e),e))
             # 执行回调函数
             if callback is not None:
                 try:
                     callback(status, result)
                 except Exception as e:
                     logger.error("Thread pool task callback failed",
-                                 "Thread_name:{},error:{}".format(current_thread_name, e))
+                                 "Thread_name:{},func:{},args:{},error_type:{},error:{}".format(current_thread_name,
+                                                                                                func, args, type(e), e))
             """
             任务完成，此线程加入空闲列表
             
@@ -113,8 +117,9 @@ class thread_pool:
                     # 继续从工作列表获取任务并执行
                     task = self.work_queue.get()
             except Exception as e:
-                logger.error("Thread pool task finish then continue failed", "Thread_name:{},error:{}"
-                             .format(current_thread_name, e))
+                logger.error("Thread pool task finish then continue failed",
+                             "Thread_name:{},func:{},args:{},error_type:{},error:{}".format(current_thread_name, func,
+                                                                                            args, type(e), e))
             finally:
                 # 循环执行新任务，此线程从空闲列表移除
                 self.free_list.remove(current_thread_name)
@@ -177,9 +182,11 @@ def callback(status, result):
 
 
 if __name__ == '__main__':
-    pool = thread_pool(10)
-    for i in range(100):
-        pool.add(test, (i,), callback)
+    pool = thread_pool(100)
+    for i in range(1000):
+        pool.add(func=test,
+                 args=(i,),
+                 callback=callback)
     time.sleep(5)
     pool.close()
     print("finish")

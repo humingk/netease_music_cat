@@ -6,7 +6,7 @@
 import config
 import json
 import sys
-from my_tools.database_pool import database_pool
+from my_tools.database_tool import database_pool
 from netease.first_param import first_param
 from netease.request_data import request_data
 from my_tools.logger_tool import loggler_tool
@@ -46,7 +46,7 @@ class user_playlists:
             else:
                 return False, []
         except Exception as e:
-            logger.error("get_user_playlists failed", "user_id:{},error:{}".format(user_id, e))
+            logger.error("get_user_playlists failed", "user_id:{},error_type:{},error:{}".format(user_id,type(e), e))
             return False, []
         playlist_count = 0
         created_playlists_count = 0
