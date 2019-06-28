@@ -16,7 +16,7 @@ stop_task = object()
 
 class thread_pool:
     """
-    线程池类
+    线程池类(弃用，改用future的ThreadPoolExecutor)
     关键错误：出现死锁，待解决
 
     """

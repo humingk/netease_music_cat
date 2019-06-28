@@ -40,7 +40,7 @@ CREATE TABLE artist
 (
     artist_id    char(20)     NOT NULL,
     artist_name  varchar(100) NOT NULL default "",
-    artist_score int          NOT NULL default 0,
+    artist_score int          NOT NULL default -1,
     primary key (artist_id),
     index artist_name (artist_name),
     index artist_score (artist_score)

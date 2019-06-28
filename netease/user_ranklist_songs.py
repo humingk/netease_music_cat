@@ -8,7 +8,7 @@ import config
 import json
 from netease.first_param import first_param
 from netease.request_data import request_data
-from my_tools.database_tool import database_pool
+from my_tools.database_tool import database_tool
 from my_tools.logger_tool import loggler_tool
 
 logger = loggler_tool()
@@ -31,72 +31,102 @@ class user_ranklist_songs:
         """
         # 请求参数
         _first_param = first_param().get_first_param_ranklist(user_id=user_id, rank_type=rank_type)
-        # 请求数据
-        content = request_data().get_request_data(first_param=_first_param[1], url=config.url_user_rank)
+        # 请求数据 ----------------------------------------------------
+        json_data = None
         try:
+            content = request_data().get_request_data(first_param=_first_param[1], url=config.url_user_rank)
             if content[0]:
                 if rank_type == config.rank_type_all:
                     json_data = json.loads(content[1])["allData"]
                 elif rank_type == config.rank_type_week:
                     json_data = json.loads(content[1])["weekData"]
             else:
-                return False, []
+                return False, None
         except KeyError as e:
             logger.error(
-                "get_user_ranklist_songs failed, Maybe the guy's ranklist is hidden,can you see it in the webpage ?",
+                "get_user_ranklist_songs get failed, Maybe the guy's ranklist is hidden,can you see it in the webpage ?",
                 "user_id:{},rank_type:{},error_type:{},error:{}".format(user_id, rank_type, type(e), e))
-            return False, []
+            return False, None
         except Exception as e:
-            logger.error("get_user_ranklist_songs failed", "user_id:{},rank_type:{},error:{}"
+            logger.error("get_user_ranklist_songs get failed", "user_id:{},rank_type:{},error:{}"
                          .format(user_id, rank_type, e))
-            return False, []
-        song_count = 0
+            return False, None
+        # 解析数据 ----------------------------------------------------
         ranklist_id = user_id + "r" + str(rank_type)
-        pool = database_pool()
-        pool.insert_user(user_id=user_id)
-        pool.insert_ranklist(ranklist_id=ranklist_id, ranklist_type=rank_type,
-                             ranklist_date=int(round(time.time() * 1000)))
-        pool.insert_user_ranklist(user_id=user_id, ranklist_id=ranklist_id)
-        pool.commit()
-        user_ranklist_songs = []
-        while song_count < rank_max and song_count < len(json_data):
-            self.__add(user_id, song_count, rank_type, ranklist_id, json_data, pool, user_ranklist_songs)
-            song_count += 1
-        logger.debug("get_user_ranklist_songs success", "user_id:{},rank_type:{},rank_count:{}"
-                     .format(user_id, rank_type, song_count))
-        pool.commit()
-        return True, user_ranklist_songs
-
-    def __add(self, user_id, song_count, rank_type, ranklist_id, json_data, pool, user_ranklist_songs):
-        """
-        添加到排行榜歌曲列表
-
-        :param user_id: 用户id
-        :param song_count: 排行榜歌曲位移
-        :param rank_type: 排行榜种类
-        :param ranklist_id: 排行榜id
-        :param json_data: 待添加的数据
-        :param pool: 数据库连接池
-        :param user_ranklist_songs: 返回的数据
-        """
-        song = {
-            "song_id": json_data[song_count]["song"]["id"],
-            "song_name": json_data[song_count]["song"]["name"],
-            "song_score": json_data[song_count]["score"]
-        }
-        artist = {
-            "artist_id": json_data[song_count]["song"]["song"]["artist"]["id"],
-            "artist_name": json_data[song_count]["song"]["song"]["artist"]["name"],
-            "artist_score": json_data[song_count]["song"]["song"]["artist"]["score"]
-        }
-        user_ranklist_songs.append({"song": song, "artist": artist})
-        pool.insert_song(song_id=song["song_id"], song_name=song["song_name"])
-        pool.insert_artist(artist_id=artist["artist_id"], artist_name=artist["artist_name"],
-                           artist_score=artist["artist_score"])
-        pool.insert_song_ranklist(song_id=song["song_id"], ranklist_id=ranklist_id, song_score=song["song_score"])
-        pool.insert_artist_song(artist_id=artist["artist_id"], song_id=song["song_id"])
+        song_success_count = 0
+        rank_list = []
+        user_rank_list = []
+        song_list = []
+        artist_list = []
+        artist_song_list = []
+        song_rank_list = []
+        try:
+            # ranklist_id rank_type rank_date
+            rank_list.append([
+                ranklist_id,
+                rank_type,
+                int(round(time.time() * 1000))
+            ])
+            # user_id ranklist_id
+            user_rank_list.append([
+                user_id,
+                ranklist_id
+            ])
+            while song_success_count < rank_max and song_success_count < len(json_data):
+                # song_id song_name
+                song_list.append([
+                    json_data[song_success_count]["song"]["id"],
+                    json_data[song_success_count]["song"]["name"]
+                ])
+                # song_id ranklist_id song_score
+                song_rank_list.append([
+                    json_data[song_success_count]["song"]["id"],
+                    ranklist_id,
+                    json_data[song_success_count]["score"]
+                ])
+                # artist_id artist_name artist_score
+                artist_list.append([
+                    json_data[song_success_count]["song"]["song"]["artist"]["id"],
+                    json_data[song_success_count]["song"]["song"]["artist"]["name"],
+                    json_data[song_success_count]["song"]["song"]["artist"]["score"]
+                ])
+                # artist_id song_id
+                artist_song_list.append([
+                    json_data[song_success_count]["song"]["song"]["artist"]["id"],
+                    json_data[song_success_count]["song"]["id"]
+                ])
+                song_success_count += 1
+        except Exception as e:
+            logger.error("get_user_ranklist_songs parse failed",
+                         "user_id:{},rank_type:{},error_type:{},song_success_count:{},error:{}".
+                         format(user_id, rank_type, song_success_count, type(e), e))
+            return False, None
+        # 存储数据 ----------------------------------------------------
+        try:
+            _database_tool = database_tool()
+            _database_tool.insert_many_ranklist(rank_list)
+            _database_tool.insert_many_song(song_list)
+            _database_tool.insert_many_artist(artist_list)
+            _database_tool.commit()
+            _database_tool.insert_many_user_ranklist(user_rank_list)
+            _database_tool.insert_many_song_ranklist(song_rank_list)
+            _database_tool.insert_many_artist_song(artist_song_list)
+            _database_tool.commit()
+            _database_tool.close()
+        except Exception as e:
+            logger.error("get_user_ranklist_songs save failed",
+                         "user_id:{},rank_type:{},song_count_success,error_type:{},error:{}"
+                         .format(user_id, rank_type, song_success_count, type(e), e))
+            return False, None
+        logger.info("get_user_ranklist_songs success",
+                    "user_id:{},rank_type:{},song_success_count:{}".format(user_id, rank_type, song_success_count))
+        return True, (rank_list, song_list, artist_list, user_rank_list, song_rank_list, artist_song_list)
 
 
 if __name__ == "__main__":
-    # print(user_ranklist_songs().get_user_ranklist_songs(user_id=config.user_id, rank_type=config.rank_type_week))
-    print(user_ranklist_songs().get_user_ranklist_songs(user_id=config.user_id, rank_type=config.rank_type_all))
+    _database_tool = database_tool()
+    _database_tool.insert_many_user([[config.user_id, config.user_name]])
+    _database_tool.commit()
+    _database_tool.close()
+    # user_ranklist_songs().get_user_ranklist_songs(user_id=config.user_id, rank_type=config.rank_type_week)
+    user_ranklist_songs().get_user_ranklist_songs(user_id=config.user_id, rank_type=config.rank_type_all)
