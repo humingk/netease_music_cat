@@ -88,8 +88,8 @@ class database_tool:
         try:
             if self.connection is None:
                 self.__connect()
-            self.connection.cursor().execute(sql)
-            return True
+            result = self.connection.cursor().execute(sql)
+            status = True
         except pymysql.err.IntegrityError as e:
             # 主键重复
             if e.args[0] == 1062:
@@ -100,10 +100,13 @@ class database_tool:
                                "sql_count:{},sql:{},error_type:{},error:{}".format(len(data_list), sql, type(e), e))
             else:
                 logger.error("database execute failed", "sql:{},error_type:{},error:{}".format(sql, type(e), e))
+            result = None
+            status = False
         except Exception as e:
             logger.error("database execute failed", "sql:{},error_type:{},error:{}".format(sql, type(e), e))
-        finally:
-            return False
+            result = None
+            status = False
+        return status, result
 
     def executemany(self, sql, data_list):
         """
@@ -138,6 +141,18 @@ class database_tool:
                              "sql_count:{},sql:{},error_type:{},error:{}".format(len(data_list), sql, type(e), e))
         return False
 
+    def select_list(self, sql):
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(sql)
+            result = cursor.fetchall()
+            status = True
+        except Exception as e:
+            logger.error("database select_all failed", "sql:{},error_type:{},error:{}".format(sql, type(e), e))
+            status = False
+            result = None
+        return status, result
+
     def commit(self):
         try:
             self.connection.commit()
@@ -171,6 +186,18 @@ class database_tool:
     def insert_many_song(self, data_list):
         self.executemany(
             "insert into song(song_id,song_name) values (%s,%s) on duplicate key update song_id = song_id,song_name=song_name",
+            data_list
+        )
+
+    def insert_many_ptag(self, data_list):
+        self.executemany(
+            "insert into ptag(ptag_name) values (%s) on duplicate key update ptag_name=ptag_name",
+            data_list
+        )
+
+    def insert_many_playlist_ptag(self, data_list):
+        self.executemany(
+            "insert into playlist_ptag(playlist_id,ptag_name) values (%s,%s) on duplicate key update playlist_id=playlist_id",
             data_list
         )
 
@@ -224,13 +251,13 @@ class database_tool:
 
     def insert_many_artist(self, data_list):
         self.executemany(
-            "insert into artist(artist_id,artist_name,artist_score) values (%s,%s,%s) on duplicate key update artist_id = artist_id",
+            "insert into artist(artist_id,artist_name) values (%s,%s) on duplicate key update artist_id = artist_id",
             data_list
         )
 
     def insert_many_artist_song(self, data_list):
         self.executemany(
-            "insert into artist_song(artist_id,song_id) values (%s,%s) on duplicate key update artist_id = artist_id",
+            "insert into artist_song(artist_id,song_id,sort) values (%s,%s,%s) on duplicate key update artist_id = artist_id",
             data_list
         )
 
@@ -246,6 +273,20 @@ class database_tool:
         self.execute(
             "update song set song_default_comment_count={} where song_id={}"
                 .format(song_default_comment_count, song_id)
+        )
+
+    # 表查询 ---------------
+
+    def select_user_list(self, start, count):
+        return self.select_list(
+            "select * from user limit {} offset {}"
+                .format(count, start)
+        )
+
+    def select_song_list(self, start, count):
+        return self.select_list(
+            "select * from song limit {} offset {}"
+                .format(count, start)
         )
 
 

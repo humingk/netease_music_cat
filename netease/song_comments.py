@@ -261,7 +261,7 @@ if __name__ == '__main__':
     _database_tool.close()
     print(song_comments().get_song_comments_total(song_id=31445772, comment_type=config.song_comments_type_hot))
     print(song_comments().get_song_comments_total(song_id=31445772, comment_type=config.song_comments_type_default))
-    song_comments().get_song_comments_hot(song_id=31445772, song_comments_hot_max=300, thread_count=20,
+    song_comments().get_song_comments_hot(song_id=28718073, song_comments_hot_max=1000, thread_count=20,
                                           thread_inteval_time=2, song_comments_page_limit=100)
     # song_comments().get_song_comments_default(song_id=31445772, thread_count=20, thread_inteval_time=2,
     #                                           song_comments_new_max=500, song_comments_old_max=500,

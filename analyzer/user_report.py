@@ -4,13 +4,11 @@
 # author: humingk
 # ----------------------
 
-class base_song_comments:
+class user_report:
     """
-    基于歌曲评论的协同过滤算法
-    歌曲与歌曲的相识度
+    用户听歌报告生成
 
     """
-
 
 if __name__ == '__main__':
-    base_song_comments()
+    user_report()

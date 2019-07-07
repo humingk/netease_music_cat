@@ -38,12 +38,10 @@ CREATE TABLE ranklist
 
 CREATE TABLE artist
 (
-    artist_id    char(20)     NOT NULL,
-    artist_name  varchar(100) NOT NULL default "",
-    artist_score int          NOT NULL default -1,
+    artist_id   char(20)     NOT NULL,
+    artist_name varchar(100) NOT NULL default "",
     primary key (artist_id),
-    index artist_name (artist_name),
-    index artist_score (artist_score)
+    index artist_name (artist_name)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
@@ -59,6 +57,24 @@ CREATE TABLE song
     index song_default_comment_count (song_default_comment_count)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
+
+CREATE TABLE ptag
+(
+    ptag_name char(20) NOT NULL,
+    primary key (ptag_name)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+CREATE TABLE playlist_ptag
+(
+    playlist_id char(20) NOT NULL,
+    ptag_name   char(20) NOT NULL,
+    primary key (playlist_id, ptag_name),
+    foreign key (playlist_id) references playlist (playlist_id),
+    foreign key (ptag_name) references ptag (ptag_name)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
 
 CREATE TABLE user_playlist
 (
@@ -146,13 +162,14 @@ CREATE TABLE song_comment
   DEFAULT CHARSET = utf8mb4;
 
 
-
 CREATE TABLE artist_song
 (
     artist_id char(20) NOT NULL,
     song_id   char(20) NOT NULL,
+    sort      char(2)  NOT NULL default 0,
     primary key (artist_id, song_id),
     foreign key (artist_id) references artist (artist_id),
-    foreign key (song_id) references song (song_id)
+    foreign key (song_id) references song (song_id),
+    index sort (sort)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;

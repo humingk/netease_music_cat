@@ -4,6 +4,8 @@
 # author: humingk
 # ----------------------
 import time
+from concurrent.futures import ThreadPoolExecutor
+
 import config
 import json
 from netease.first_param import first_param
@@ -19,6 +21,36 @@ class user_ranklist_songs:
     排行榜歌曲获取类
 
     """
+
+    def get_user_ranklist_songs_thread(self, user_list: list, thread_count=10, thread_inteval_time=2,
+                                       rank_max=config.rank_max):
+        """
+        多线程获取用户列表的排行榜
+
+        :type user_list: list
+        :param user_list: 用户列表
+        :param thread_count: 线程数
+        :param thread_inteval_time: 线程添加任务时间间隔
+        :param rank_max: 排行榜歌曲获取最大数
+        :return:
+        """
+        try:
+            success_count = 0
+            with ThreadPoolExecutor(thread_count) as executer:
+                future_list = []
+                for user_id in user_list:
+                    future = executer.submit(self.get_user_ranklist_songs,
+                                             user_id[0], config.rank_type_all, rank_max)
+                    future_list.append(future)
+                    time.sleep(thread_inteval_time)
+                for future in future_list:
+                    if future.result()[0]:
+                        success_count += 1
+            return True
+        except Exception as e:
+            logger.error("get_user_ranklist_songs_thread failed", "user_id_list_length:{},error_type:{},error:{}"
+                         .format(len(user_list), type(e), e))
+        return False
 
     def get_user_ranklist_songs(self, user_id=config.user_id, rank_type=config.rank_type, rank_max=config.rank_max):
         """
@@ -43,16 +75,17 @@ class user_ranklist_songs:
             else:
                 return False, None
         except KeyError as e:
-            logger.error(
+            logger.warning(
                 "get_user_ranklist_songs get failed, Maybe the guy's ranklist is hidden,can you see it in the webpage ?",
-                "user_id:{},rank_type:{},error_type:{},error:{}".format(user_id, rank_type, type(e), e))
+                "user_id:{},rank_type:{},ranklist_url:https://music.163.com/#/user/songs/rank?id={} ,error_type:{},error:{}"
+                    .format(user_id, rank_type, user_id, type(e), e))
             return False, None
         except Exception as e:
-            logger.error("get_user_ranklist_songs get failed", "user_id:{},rank_type:{},error:{}"
-                         .format(user_id, rank_type, e))
+            logger.error("get_user_ranklist_songs get failed", "user_id:{},rank_type:{},error_type:{},error:{}"
+                         .format(user_id, rank_type, type(e), e))
             return False, None
         # 解析数据 ----------------------------------------------------
-        ranklist_id = user_id + "r" + str(rank_type)
+        ranklist_id = str(user_id) + "r" + str(rank_type)
         song_success_count = 0
         rank_list = []
         user_rank_list = []
@@ -84,17 +117,21 @@ class user_ranklist_songs:
                     ranklist_id,
                     json_data[song_success_count]["score"]
                 ])
-                # artist_id artist_name artist_score
-                artist_list.append([
-                    json_data[song_success_count]["song"]["song"]["artist"]["id"],
-                    json_data[song_success_count]["song"]["song"]["artist"]["name"],
-                    json_data[song_success_count]["song"]["song"]["artist"]["score"]
-                ])
-                # artist_id song_id
-                artist_song_list.append([
-                    json_data[song_success_count]["song"]["song"]["artist"]["id"],
-                    json_data[song_success_count]["song"]["id"]
-                ])
+                # 多个歌手
+                artist_count = 0
+                for artist in json_data[song_success_count]["song"]["ar"]:
+                    # artist_id artist_name
+                    artist_list.append([
+                        artist["id"],
+                        artist["name"]
+                    ])
+                    # artist_id song_id sort
+                    artist_song_list.append([
+                        artist["id"],
+                        json_data[song_success_count]["song"]["id"],
+                        artist_count
+                    ])
+                    artist_count += 1
                 song_success_count += 1
         except Exception as e:
             logger.error("get_user_ranklist_songs parse failed",
@@ -128,5 +165,9 @@ if __name__ == "__main__":
     _database_tool.insert_many_user([[config.user_id, config.user_name]])
     _database_tool.commit()
     _database_tool.close()
-    # user_ranklist_songs().get_user_ranklist_songs(user_id=config.user_id, rank_type=config.rank_type_week)
-    user_ranklist_songs().get_user_ranklist_songs(user_id=config.user_id, rank_type=config.rank_type_all)
+    user_ranklist_songs().get_user_ranklist_songs(user_id=config.user_id, rank_type=config.rank_type_week)
+    # user_ranklist_songs().get_user_ranklist_songs(user_id=config.user_id, rank_type=config.rank_type_all)
+    # user_id_list = database_tool().select_user_list(start=0, count=5)
+    # user_ranklist_songs().get_user_ranklist_songs_thread(user_list=user_id_list[1], thread_count=5,
+    #                                                      thread_inteval_time=2,
+    #                                                      rank_max=100)

@@ -4,6 +4,9 @@
 # author: humingk
 # ----------------------
 import json
+import time
+from concurrent.futures import ThreadPoolExecutor
+
 import config
 from my_tools.database_tool import database_tool
 from netease.user_playlists import user_playlists
@@ -19,6 +22,54 @@ class playlist_songs:
     歌单歌曲获取类
 
     """
+
+    def get_playlist_songs_by_user_list_thread(self, user_list: list, thread_count=10, thread_inteval_time=2,
+                                               default_songs_max=config.default_songs_max,
+                                               created_songs_max=config.created_songs_max,
+                                               collected_songs_max=config.collected_songs_max,
+                                               created_playlists_max=config.created_playlists_max,
+                                               collected_playlists_max=config.collected_playlists_max,
+                                               is_playlists_default=config.is_playlists_default,
+                                               is_playlists_created=config.is_playlists_created,
+                                               is_playlists_collected=config.is_playlists_collected):
+        """
+        多线程
+        通过用户id获取用户歌单列表，再获取歌单歌曲列表
+        参数如下方法
+
+        :param user_list: 用户表列表
+        :param thread_count: 线程数
+        :param thread_inteval_time:线程间隔时间
+        :param default_songs_max: “用户喜欢的音乐”歌单最大歌曲选取数
+        :param created_songs_max: 用户创建歌单的歌曲最大选取数
+        :param collected_songs_max: 用户收藏歌单的歌曲最大选取数
+        :param created_playlists_max: 用户创建歌单的最大选取数
+        :param collected_playlists_max: 用户收藏歌单的最大选取数
+        :param is_playlists_default: 是否爬取“用户喜欢的音乐”歌单
+        :param is_playlists_created: 是否爬取用户创建的歌单
+        :param is_playlists_collected: 是否爬取用户收藏的歌单
+        :return:
+        """
+        try:
+            success_count = 0
+            with ThreadPoolExecutor(thread_count) as executer:
+                future_list = []
+                for user_id in user_list:
+                    future = executer.submit(self.get_playlist_songs_by_user_id,
+                                             user_id[0], default_songs_max, created_songs_max, collected_songs_max,
+                                             created_playlists_max, collected_playlists_max, is_playlists_default,
+                                             is_playlists_created, is_playlists_collected)
+                    future_list.append(future)
+                    time.sleep(thread_inteval_time)
+                for future in future_list:
+                    if future.result()[0]:
+                        success_count += 1
+
+            return True, success_count
+        except Exception as e:
+            logger.error("get_playlist_songs_by_user_list_thread failed",
+                         "error_type:{},error:{}".format(type(e), e))
+            return False, None
 
     def get_playlist_songs_by_user_id(self, user_id=config.user_id, default_songs_max=config.default_songs_max,
                                       created_songs_max=config.created_songs_max,
@@ -132,18 +183,20 @@ class playlist_songs:
                     songs_data[song_count]["name"]
                 ])
                 # 多个歌手
+                artist_count = 0
                 for artist in songs_data[song_count]['ar']:
-                    # artist_id artist_name artist_score
+                    # artist_id artist_name
                     artist_list.append([
                         artist["id"],
-                        artist["name"],
-                        -1
+                        artist["name"]
                     ])
-                    # artist_id song_id
+                    # artist_id song_id sort
                     artist_song_list.append([
                         artist["id"],
-                        songs_data[song_count]["id"]
+                        songs_data[song_count]["id"],
+                        artist_count
                     ])
+                    artist_count += 1
                 # song_id playlist_id
                 song_playlist_list.append([
                     songs_data[song_count]["id"],

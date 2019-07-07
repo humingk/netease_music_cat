@@ -84,7 +84,7 @@ created_playlist = 6
 collected_playlist = 7
 
 # 标准歌单默认类型
-playlist_type = 0
+playlist_type = 4
 
 # 标准歌单最大歌曲选取数
 playlist_songs_max = 50
