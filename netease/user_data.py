@@ -44,7 +44,7 @@ class user_data:
         :param song_count: 歌曲表数目
         :return:
         """
-        song_list = database_tool().select_song_list(start=song_start, count=song_count)
+        song_list = database_tool().select_list_limit(table="song", start=song_start, count=song_count)
         if song_list[0]:
             for song in song_list[1]:
                 song_comments().get_song_comments_hot(song_id=song[0], song_comments_hot_max=1000, thread_count=10,
@@ -59,7 +59,7 @@ class user_data:
         :return:
         """
 
-        user_list = database_tool().select_user_list(start=user_start, count=user_count)
+        user_list = database_tool().select_list_limit(table="user", start=user_start, count=user_count)
         if user_list[0]:
             user_ranklist_songs().get_user_ranklist_songs_thread(user_list=user_list[1], thread_count=10,
                                                                  thread_inteval_time=2, rank_max=100)
@@ -72,10 +72,33 @@ class user_data:
         :param user_count: 用户表数目
         :return:
         """
-        user_list = database_tool().select_user_list(start=user_start, count=user_count)
+        user_list = database_tool().select_list_limit(table="user", start=user_start, count=user_count)
         if user_list[0]:
             playlist_songs().get_playlist_songs_by_user_list_thread(user_list=user_list[1], thread_count=10,
                                                                     thread_inteval_time=2)
+
+    def parse_user_ranklist_song(self):
+        """
+        排行榜score解析到user_song表
+
+        :return:
+        """
+        _database_tool = database_tool()
+        ranklist_list = _database_tool.select_list_by_column(table="ranklist", column="ranklist_type",
+                                                             value=config.rank_type_all)
+        if ranklist_list[0]:
+            user_song_list = []
+            for ranklist in ranklist_list[1]:
+                user_ranklist = _database_tool.select_by_column(table="user_ranklist", column="ranklist_id",
+                                                                value=ranklist[0], is_value_str=True)
+                song_ranklist_list = _database_tool.select_list_by_column(table="song_ranklist", column="ranklist_id",
+                                                                          value=ranklist[0], is_value_str=True)
+                if user_ranklist[0] and song_ranklist_list[0]:
+                    for song_ranklist in song_ranklist_list[1]:
+                        user_song_list.append([user_ranklist[1][0], song_ranklist[0], song_ranklist[2]])
+            _database_tool.insert_many_user_song(user_song_list)
+            _database_tool.commit()
+            _database_tool.close()
 
 
 if __name__ == '__main__':
@@ -85,5 +108,6 @@ if __name__ == '__main__':
     # 评论过五万的歌曲歌单
     # u.get_playlist_songs(455717860)
     # u.get_song_comments(song_start=0, song_count=100)
-    # u.get_user_ranklists_songs(user_start=0, user_count=100)
-    u.get_user_playlist_songs(user_start=0, user_count=100)
+    # u.get_user_ranklists_songs(user_start=200, user_count=300)
+    # u.get_user_playlist_songs(user_start=0, user_count=100)
+    u.parse_user_ranklist_song()

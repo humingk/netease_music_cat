@@ -58,20 +58,20 @@ CREATE TABLE song
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
-CREATE TABLE ptag
+CREATE TABLE tag
 (
-    ptag_name char(20) NOT NULL,
-    primary key (ptag_name)
+    tag_name char(20) NOT NULL,
+    primary key (tag_name)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
-CREATE TABLE playlist_ptag
+CREATE TABLE playlist_tag
 (
     playlist_id char(20) NOT NULL,
-    ptag_name   char(20) NOT NULL,
-    primary key (playlist_id, ptag_name),
+    tag_name    char(20) NOT NULL,
+    primary key (playlist_id, tag_name),
     foreign key (playlist_id) references playlist (playlist_id),
-    foreign key (ptag_name) references ptag (ptag_name)
+    foreign key (tag_name) references tag (tag_name)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
@@ -106,11 +106,13 @@ CREATE TABLE song_playlist
 (
     song_id       char(20) NOT NULL,
     playlist_id   char(20) NOT NULL,
+    song_pop      char(3)  NOT NULL default -1,
     playlist_type int(1)   NOT NULL default 0,
     primary key (song_id, playlist_id),
     foreign key (song_id) references song (song_id),
     foreign key (playlist_id) references playlist (playlist_id),
-    index playlist_type (playlist_type)
+    index playlist_type (playlist_type),
+    index song_pop (song_pop)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
@@ -118,7 +120,7 @@ CREATE TABLE song_ranklist
 (
     song_id     char(20) NOT NULL,
     ranklist_id char(20) NOT NULL,
-    song_score  int(3)   NOT NULL default 0,
+    song_score  int(3)   NOT NULL default -1,
     primary key (song_id, ranklist_id),
     foreign key (song_id) references song (song_id),
     foreign key (ranklist_id) references ranklist (ranklist_id),
@@ -173,3 +175,29 @@ CREATE TABLE artist_song
     index sort (sort)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
+
+CREATE TABLE song_tag
+(
+    song_id   char(20)  NOT NULL,
+    tag_name  char(20)  NOT NULL,
+    tag_count char(100) NOT NULL default 1,
+    primary key (song_id, tag_name),
+    foreign key (song_id) references song (song_id),
+    foreign key (tag_name) references tag (tag_name),
+    index tag_count (tag_count)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+CREATE TABLE user_song
+(
+    user_id char(20) NOT NULL,
+    song_id char(20) NOT NULL,
+    score   char(3)  NOT NULL,
+    primary key (user_id, song_id),
+    foreign key (user_id) references user (user_id),
+    foreign key (song_id) references song (song_id),
+    index score (score)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+

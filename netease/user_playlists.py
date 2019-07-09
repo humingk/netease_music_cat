@@ -124,10 +124,10 @@ class user_playlists:
         try:
             _database_tool = database_tool()
             _database_tool.insert_many_playlist(playlist_list)
-            _database_tool.insert_many_ptag(ptag_list)
+            _database_tool.insert_many_tag(ptag_list)
             _database_tool.commit()
             _database_tool.insert_many_user_playlist(user_playlists_list)
-            _database_tool.insert_many_playlist_ptag(playlist_ptag_list)
+            _database_tool.insert_many_playlist_tag(playlist_ptag_list)
             _database_tool.commit()
             _database_tool.close()
         except Exception as e:

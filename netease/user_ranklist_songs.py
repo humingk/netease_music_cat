@@ -165,7 +165,7 @@ if __name__ == "__main__":
     _database_tool.insert_many_user([[config.user_id, config.user_name]])
     _database_tool.commit()
     _database_tool.close()
-    user_ranklist_songs().get_user_ranklist_songs(user_id=config.user_id, rank_type=config.rank_type_week)
+    user_ranklist_songs().get_user_ranklist_songs(user_id=config.user_id, rank_type=config.rank_type_all)
     # user_ranklist_songs().get_user_ranklist_songs(user_id=config.user_id, rank_type=config.rank_type_all)
     # user_id_list = database_tool().select_user_list(start=0, count=5)
     # user_ranklist_songs().get_user_ranklist_songs_thread(user_list=user_id_list[1], thread_count=5,

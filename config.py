@@ -87,7 +87,7 @@ collected_playlist = 7
 playlist_type = 4
 
 # 标准歌单最大歌曲选取数
-playlist_songs_max = 50
+playlist_songs_max = sys.maxsize
 
 # “用户喜欢的音乐”歌单 --------------------
 
@@ -103,7 +103,7 @@ default_songs_max = sys.maxsize
 is_playlists_created = True
 
 # 用户创建歌单的最大选取数
-created_playlists_max = 20
+created_playlists_max = sys.maxsize
 
 # 用户创建歌单的歌曲最大选取数
 created_songs_max = sys.maxsize
@@ -114,10 +114,10 @@ created_songs_max = sys.maxsize
 is_playlists_collected = True
 
 # 用户收藏歌单的最大选取数
-collected_playlists_max = 10
+collected_playlists_max = sys.maxsize
 
 # 用户收藏歌单的歌曲最大选取数
-collected_songs_max = 20
+collected_songs_max = sys.maxsize
 
 # 歌曲评论 ------------------------------
 # 每首歌的最大评论获取数(目前只能获取时间正序和时间倒序各10000条)

@@ -160,6 +160,7 @@ class playlist_songs:
         # 请求数据 ----------------------------------------------------
         try:
             content = request_data().get_request_data(first_param=_first_param[1], url=config.url_playlist)
+            print(content)
             if content[0]:
                 songs_data = json.loads(content[1])["playlist"]["tracks"]
             else:
@@ -197,10 +198,11 @@ class playlist_songs:
                         artist_count
                     ])
                     artist_count += 1
-                # song_id playlist_id
+                # song_id playlist_id song_pop playlist_type
                 song_playlist_list.append([
                     songs_data[song_count]["id"],
                     playlist_id,
+                    songs_data[song_count]["pop"],
                     playlist_type
                 ])
                 song_count += 1
@@ -236,6 +238,6 @@ if __name__ == "__main__":
     _database_tool.insert_many_playlist([[config.playlist_id, '', 0, 0, '']])
     _database_tool.commit()
     _database_tool.close()
-    # print(playlist_songs().get_playlist_songs_by_playlist_id(config.playlist_id)[1])
-    print(playlist_songs().get_playlist_songs_by_user_id(config.user_id, collected_playlists_max=100,
-                                                         collected_songs_max=200)[1])
+    print(playlist_songs().get_playlist_songs_by_playlist_id(config.playlist_id)[1])
+    # print(playlist_songs().get_playlist_songs_by_user_id(config.user_id, collected_playlists_max=100,
+    #                                                      collected_songs_max=200)[1])
