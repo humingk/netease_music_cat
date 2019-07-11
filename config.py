@@ -17,8 +17,14 @@ import logging
 user_id = "474252223"
 user_name = "IsolationTom"
 
-# user_id="55494140"
-# user_name="不散的和弦KC"
+# user_id = "281840834"
+# user_name = "手拉小"
+
+# user_id = "284211318"
+# user_name = "children520xiao"
+
+# user_id = "55494140"
+# user_name = "不散的和弦KC"
 
 # 数据库信息 ----------------------------
 
@@ -141,6 +147,23 @@ song_comments_thread_thread_inteval_time = 1
 song_comments_type_default = 0
 song_comments_type_hot = 1
 song_comments_type = song_source_default
+
+# 推荐系统影响因子所占比例 --------------------
+"""
+千分制 总和为1000% 总影响因子为0-1000
+
+"""
+
+# 排行榜 所有时间 score
+factor_rank_all_score = 6
+# 排行榜 最近一周 score
+factor_rank_week_score = 0.5
+# 喜欢的音乐歌单 pop
+factor_playlist_like_pop = 1
+# 创建的歌单 pop
+factor_playlist_create_pop = 1
+# 收藏的歌单 pop
+factor_playlist_collect_pop = 0.5
 
 # 以下为基础配置，请勿更改=================================================
 

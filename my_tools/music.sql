@@ -48,7 +48,7 @@ CREATE TABLE artist
 CREATE TABLE song
 (
     song_id                    char(20)     NOT NULL,
-    song_name                  varchar(100) NOT NULL default "",
+    song_name                  varchar(256) NOT NULL default "",
     song_hot_comment_count     int          NOT NULL default 0,
     song_default_comment_count int          NOT NULL default 0,
     primary key (song_id),
@@ -106,7 +106,7 @@ CREATE TABLE song_playlist
 (
     song_id       char(20) NOT NULL,
     playlist_id   char(20) NOT NULL,
-    song_pop      char(3)  NOT NULL default -1,
+    song_pop      int(3)   NOT NULL default 0,
     playlist_type int(1)   NOT NULL default 0,
     primary key (song_id, playlist_id),
     foreign key (song_id) references song (song_id),
@@ -120,7 +120,7 @@ CREATE TABLE song_ranklist
 (
     song_id     char(20) NOT NULL,
     ranklist_id char(20) NOT NULL,
-    song_score  int(3)   NOT NULL default -1,
+    song_score  int(3)   NOT NULL default 0,
     primary key (song_id, ranklist_id),
     foreign key (song_id) references song (song_id),
     foreign key (ranklist_id) references ranklist (ranklist_id),
@@ -178,9 +178,9 @@ CREATE TABLE artist_song
 
 CREATE TABLE song_tag
 (
-    song_id   char(20)  NOT NULL,
-    tag_name  char(20)  NOT NULL,
-    tag_count char(100) NOT NULL default 1,
+    song_id   char(20) NOT NULL,
+    tag_name  char(20) NOT NULL,
+    tag_count char(4)  NOT NULL default 1,
     primary key (song_id, tag_name),
     foreign key (song_id) references song (song_id),
     foreign key (tag_name) references tag (tag_name),
@@ -190,13 +190,23 @@ CREATE TABLE song_tag
 
 CREATE TABLE user_song
 (
-    user_id char(20) NOT NULL,
-    song_id char(20) NOT NULL,
-    score   char(3)  NOT NULL,
+    user_id              char(20) NOT NULL,
+    song_id              char(20) NOT NULL,
+    score                int(4)   NOT NULL default 0,
+    rank_all_score       int(3)   NOT NULL default 0,
+    rank_week_score      int(3)   NOT NULL default 0,
+    playlist_like_pop    int(3)   NOT NULL default 0,
+    playlist_create_pop  int(3)   NOT NULL default 0,
+    playlist_collect_pop int(3)   NOT NULL default 0,
     primary key (user_id, song_id),
     foreign key (user_id) references user (user_id),
     foreign key (song_id) references song (song_id),
-    index score (score)
+    index score (score),
+    index rank_all_score (rank_all_score),
+    index rank_week_score (rank_week_score),
+    index playlist_like_pop (playlist_like_pop),
+    index playlist_create_pop (playlist_create_pop),
+    index playlist_collect_pop (playlist_collect_pop)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 

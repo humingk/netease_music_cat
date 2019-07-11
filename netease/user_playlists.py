@@ -57,8 +57,8 @@ class user_playlists:
         collected_playlists_count = 0
         playlist_list = []
         user_playlists_list = []
-        ptag_list = []
-        playlist_ptag_list = []
+        tag_list = []
+        playlist_tag_list = []
         try:
             while playlist_count < len(json_playlists_data):
                 # ”用户喜欢的音乐“歌单
@@ -67,9 +67,9 @@ class user_playlists:
                                           playlist_type=config.default_playlist)
                     playlist_list.append(parse["playlist_list"])
                     user_playlists_list.append(parse["user_playlist_list"])
-                    if len(parse["ptag_list"]) != 0:
-                        ptag_list.extend(parse["ptag_list"])
-                        playlist_ptag_list.extend(parse["playlist_ptag_list"])
+                    if len(parse["tag_list"]) != 0:
+                        tag_list.extend(parse["tag_list"])
+                        playlist_tag_list.extend(parse["playlist_tag_list"])
                     playlist_count += 1
                     is_playlists_default = False
                     continue
@@ -88,9 +88,9 @@ class user_playlists:
                                                   playlist_type=config.created_playlist)
                             playlist_list.append(parse["playlist_list"])
                             user_playlists_list.append(parse["user_playlist_list"])
-                            if len(parse["ptag_list"]) != 0:
-                                ptag_list.extend(parse["ptag_list"])
-                                playlist_ptag_list.extend(parse["playlist_ptag_list"])
+                            if len(parse["tag_list"]) != 0:
+                                tag_list.extend(parse["tag_list"])
+                                playlist_tag_list.extend(parse["playlist_tag_list"])
                             created_playlists_count += 1
                         playlist_count += 1
                     else:
@@ -107,9 +107,9 @@ class user_playlists:
                                                   playlist_type=config.collected_playlist)
                             playlist_list.append(parse["playlist_list"])
                             user_playlists_list.append(parse["user_playlist_list"])
-                            if len(parse["ptag_list"]) != 0:
-                                ptag_list.extend(parse["ptag_list"])
-                                playlist_ptag_list.extend(parse["playlist_ptag_list"])
+                            if len(parse["tag_list"]) != 0:
+                                tag_list.extend(parse["tag_list"])
+                                playlist_tag_list.extend(parse["playlist_tag_list"])
                             collected_playlists_count += 1
                     # 若此处出现不是用户收藏的歌单情况，说明用户创建歌单没有完全爬取，继续循环
                     playlist_count += 1
@@ -124,10 +124,10 @@ class user_playlists:
         try:
             _database_tool = database_tool()
             _database_tool.insert_many_playlist(playlist_list)
-            _database_tool.insert_many_tag(ptag_list)
+            _database_tool.insert_many_tag(tag_list)
             _database_tool.commit()
             _database_tool.insert_many_user_playlist(user_playlists_list)
-            _database_tool.insert_many_playlist_tag(playlist_ptag_list)
+            _database_tool.insert_many_playlist_tag(playlist_tag_list)
             _database_tool.commit()
             _database_tool.close()
         except Exception as e:
@@ -150,14 +150,14 @@ class user_playlists:
         :param playlist_type: 歌单类型
         :return: playlist_list: 歌单列表
         :return: user_playlist_list: 用户歌单列表
-        :return: ptag_list: 歌单类型列表
-        :return: playlist_ptag_list: 歌单歌单类型列表
+        :return: tag_list: 歌单类型列表
+        :return: playlist_tag_list: 歌单歌单类型列表
         """
-        ptag_list = []
-        playlist_ptag_list = []
+        tag_list = []
+        playlist_tag_list = []
         for ptag in data[playlist_count]["tags"]:
-            ptag_list.append([ptag])
-            playlist_ptag_list.append([
+            tag_list.append([ptag])
+            playlist_tag_list.append([
                 data[playlist_count]["id"],
                 ptag
             ])
@@ -174,8 +174,8 @@ class user_playlists:
                 data[playlist_count]["id"],
                 playlist_type
             ],
-            "ptag_list": ptag_list,
-            "playlist_ptag_list": playlist_ptag_list
+            "tag_list": tag_list,
+            "playlist_tag_list": playlist_tag_list
         }
 
 

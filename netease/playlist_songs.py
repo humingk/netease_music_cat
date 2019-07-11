@@ -122,6 +122,7 @@ class playlist_songs:
                     else:
                         return False, None
                     playlist_songs = self.get_playlist_songs_by_playlist_id(playlist_id=playlist_id,
+                                                                            user_id=user_id,
                                                                             playlist_type=playlist_type,
                                                                             playlist_songs_max=playlist_songs_max)
                     if playlist_songs[0]:
@@ -141,12 +142,14 @@ class playlist_songs:
                     .format(user_id, len(user_playlists_list), user_playlsit_songs_count))
         return True, user_playlsit_songs_count, user_playlists_songs_list
 
-    def get_playlist_songs_by_playlist_id(self, playlist_id=config.playlist_id, playlist_type=config.playlist_type,
+    def get_playlist_songs_by_playlist_id(self, playlist_id=config.playlist_id, user_id=0,
+                                          playlist_type=config.playlist_type,
                                           playlist_songs_max=config.playlist_songs_max):
         """
         通过歌单id获取歌单歌曲列表
 
         :param playlist_id: 歌单id
+        :param user_id: 用户id
         :param playlist_type: 歌单类型，包括 default created collected
         :param playlist_songs_max: 歌单最大歌曲选取数
         :return: status: 是否获取到歌曲
@@ -160,9 +163,10 @@ class playlist_songs:
         # 请求数据 ----------------------------------------------------
         try:
             content = request_data().get_request_data(first_param=_first_param[1], url=config.url_playlist)
-            print(content)
             if content[0]:
                 songs_data = json.loads(content[1])["playlist"]["tracks"]
+                tags_data = json.loads(content[1])["playlist"]["tags"]
+                creator_data = json.loads(content[1])["playlist"]["creator"]
             else:
                 return False, None
         except Exception as e:
@@ -176,11 +180,29 @@ class playlist_songs:
         artist_list = []
         artist_song_list = []
         song_playlist_list = []
+        tag_list = tags_data
+        song_tag_list = []
+        # user_id user_name
+        creator_list = [[
+            creator_data["userId"],
+            creator_data["nickname"]
+        ]]
+        # user_id playlist_id playlist_type
+        creator_playlist_list = [[
+            creator_data["userId"],
+            playlist_id,
+            config.created_playlist
+        ]]
+        # 创作者-歌曲列表
+        creator_song_list = []
+        user_song_list = []
         try:
             while song_count < playlist_songs_max and song_count < len(songs_data):
+                song_id = songs_data[song_count]["id"]
+                song_pop = int(songs_data[song_count]["pop"])
                 # song_id song_name
                 song_list.append([
-                    songs_data[song_count]["id"],
+                    song_id,
                     songs_data[song_count]["name"]
                 ])
                 # 多个歌手
@@ -194,17 +216,36 @@ class playlist_songs:
                     # artist_id song_id sort
                     artist_song_list.append([
                         artist["id"],
-                        songs_data[song_count]["id"],
+                        song_id,
                         artist_count
                     ])
                     artist_count += 1
                 # song_id playlist_id song_pop playlist_type
                 song_playlist_list.append([
-                    songs_data[song_count]["id"],
+                    song_id,
                     playlist_id,
-                    songs_data[song_count]["pop"],
+                    song_pop,
                     playlist_type
                 ])
+                # song_id tag_name
+                for tag in tag_list:
+                    song_tag_list.append([
+                        song_id,
+                        tag
+                    ])
+                # user_id song_id playlist_like/create/collect_pop
+                user_song_list.append([
+                    user_id,
+                    song_id,
+                    song_pop
+                ])
+                # user_id song_id playlist_create_pop
+                creator_song_list.append([
+                    creator_data["userId"],
+                    song_id,
+                    song_pop
+                ])
+
                 song_count += 1
         except Exception as e:
             logger.error("get_playlist_songs_by_playlist_id parse failed",
@@ -216,9 +257,24 @@ class playlist_songs:
             _database_tool = database_tool()
             _database_tool.insert_many_song(song_list)
             _database_tool.insert_many_artist(artist_list)
+            _database_tool.insert_many_tag(tag_list)
+            _database_tool.insert_many_user(creator_list)
             _database_tool.commit()
             _database_tool.insert_many_song_playlist(song_playlist_list)
             _database_tool.insert_many_artist_song(artist_song_list)
+            _database_tool.insert_many_song_tag(song_tag_list)
+            _database_tool.insert_many_user_playlist(creator_playlist_list)
+            _database_tool.insert_many_user_song_column(column="playlist_create_pop", data_list=creator_song_list)
+            if playlist_type == config.default_playlist:
+                column = "playlist_like_pop"
+            elif playlist_type == config.created_playlist:
+                column = "playlist_create_pop"
+            elif playlist_type == config.collected_playlist:
+                column = "playlist_collect_pop"
+            else:
+                column = ""
+            if column != "":
+                _database_tool.insert_many_user_song_column(column=column, data_list=user_song_list)
             _database_tool.commit()
             _database_tool.close()
         except Exception as e:
@@ -235,9 +291,8 @@ class playlist_songs:
 if __name__ == "__main__":
     _database_tool = database_tool()
     _database_tool.insert_many_user([[config.user_id, config.user_name]])
-    _database_tool.insert_many_playlist([[config.playlist_id, '', 0, 0, '']])
+    # _database_tool.insert_many_playlist([[376493212, '', 0, 0, '']])
     _database_tool.commit()
     _database_tool.close()
-    print(playlist_songs().get_playlist_songs_by_playlist_id(config.playlist_id)[1])
-    # print(playlist_songs().get_playlist_songs_by_user_id(config.user_id, collected_playlists_max=100,
-    #                                                      collected_songs_max=200)[1])
+    # print(playlist_songs().get_playlist_songs_by_playlist_id(376493212)[1])
+    print(playlist_songs().get_playlist_songs_by_user_id(config.user_id)[1])

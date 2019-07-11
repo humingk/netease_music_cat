@@ -239,17 +239,38 @@ class database_tool:
             data_list
         )
 
-    def insert_many_user_song(self, data_list):
-        self.execute(
-            "insert into user_song(user_id,song_id,score) values (%s,%s,%s) on duplicate key update user_id=user_id",
-            data_list
-        )
-
     def insert_many_song_tag(self, data_list):
         self.execute(
             "insert into song_tag(song_id,tag_name) values (%s,%s) on duplicate key update tag_count=tag_count+1",
             data_list
         )
+
+    def insert_many_user_song_column(self, column, data_list):
+        """
+        插入用户-歌曲表,并更新score
+
+        :param column: score元素列名
+        :param data_list: 数据列表
+        :return:
+        """
+        for data in data_list:
+            self.execute(
+                "insert into user_song(user_id,song_id,{0}) values ({1},{2},{3}) on duplicate key update {0}={3}; "
+                    .format(column, data[0], data[1], data[2]),
+                execute_type=1, return_type=0
+            )
+            # self.execute(
+            #     "update user_song "
+            #     "set score =cast(rank_all_score*{0}+rank_week_score*{1}+playlist_like_pop*{2}+playlist_create_pop*{3}+playlist_collect_pop*{4} as signed) "
+            #     "where user_id={5} and song_id={6};"
+            #         .format(config.factor_rank_all_score,
+            #                 config.factor_rank_week_score,
+            #                 config.factor_playlist_like_pop,
+            #                 config.factor_playlist_create_pop,
+            #                 config.factor_playlist_collect_pop,
+            #                 data[0], data[1]),
+            #     execute_type=1, return_type=0
+            # )
 
     # 表更新封装 ----------------------
 

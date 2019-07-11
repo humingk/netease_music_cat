@@ -93,6 +93,7 @@ class user_ranklist_songs:
         artist_list = []
         artist_song_list = []
         song_rank_list = []
+        user_song_list = []
         try:
             # ranklist_id rank_type rank_date
             rank_list.append([
@@ -106,16 +107,18 @@ class user_ranklist_songs:
                 ranklist_id
             ])
             while song_success_count < rank_max and song_success_count < len(json_data):
+                song_id = json_data[song_success_count]["song"]["id"]
+                song_score = json_data[song_success_count]["score"]
                 # song_id song_name
                 song_list.append([
-                    json_data[song_success_count]["song"]["id"],
+                    song_id,
                     json_data[song_success_count]["song"]["name"]
                 ])
                 # song_id ranklist_id song_score
                 song_rank_list.append([
-                    json_data[song_success_count]["song"]["id"],
+                    song_id,
                     ranklist_id,
-                    json_data[song_success_count]["score"]
+                    song_score
                 ])
                 # 多个歌手
                 artist_count = 0
@@ -128,10 +131,16 @@ class user_ranklist_songs:
                     # artist_id song_id sort
                     artist_song_list.append([
                         artist["id"],
-                        json_data[song_success_count]["song"]["id"],
+                        song_id,
                         artist_count
                     ])
                     artist_count += 1
+                # user_id song_id ranklist_all/week_score
+                user_song_list.append([
+                    user_id,
+                    song_id,
+                    song_score
+                ])
                 song_success_count += 1
         except Exception as e:
             logger.error("get_user_ranklist_songs parse failed",
@@ -148,6 +157,9 @@ class user_ranklist_songs:
             _database_tool.insert_many_user_ranklist(user_rank_list)
             _database_tool.insert_many_song_ranklist(song_rank_list)
             _database_tool.insert_many_artist_song(artist_song_list)
+            _database_tool.insert_many_user_song_column(
+                column="rank_all_score" if rank_type == config.rank_type_all else "rank_week_score",
+                data_list=user_song_list)
             _database_tool.commit()
             _database_tool.close()
         except Exception as e:
@@ -166,7 +178,7 @@ if __name__ == "__main__":
     _database_tool.commit()
     _database_tool.close()
     user_ranklist_songs().get_user_ranklist_songs(user_id=config.user_id, rank_type=config.rank_type_all)
-    # user_ranklist_songs().get_user_ranklist_songs(user_id=config.user_id, rank_type=config.rank_type_all)
+    user_ranklist_songs().get_user_ranklist_songs(user_id=config.user_id, rank_type=config.rank_type_week)
     # user_id_list = database_tool().select_user_list(start=0, count=5)
     # user_ranklist_songs().get_user_ranklist_songs_thread(user_list=user_id_list[1], thread_count=5,
     #                                                      thread_inteval_time=2,
