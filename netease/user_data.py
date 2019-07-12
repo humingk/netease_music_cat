@@ -3,12 +3,18 @@
 
 # author: humingk
 # ----------------------
+import time
+from concurrent.futures import ThreadPoolExecutor
+
 import config
 import sys
 from my_tools.database_tool import database_tool
 from netease.user_ranklist_songs import user_ranklist_songs
 from netease.playlist_songs import playlist_songs
 from netease.song_comments import song_comments
+from my_tools.logger_tool import loggler_tool
+
+logger = loggler_tool()
 
 
 class user_data:
@@ -50,35 +56,40 @@ class user_data:
                 song_comments().get_song_comments_hot(song_id=song[0], song_comments_hot_max=1000, thread_count=10,
                                                       thread_inteval_time=2)
 
-    def get_user_ranklists_songs(self, user_start, user_count):
+    def get_user_songs(self, user_start, user_count, thread_count=20, thread_inteval_time=5):
         """
-        多线程获取用户排行榜
+        多线程获取用户 排行榜+歌单
 
         :param user_start: 用户表位移
         :param user_count: 用户表数目
+        :param thread_count: 线程数
+        :param thread_inteval_time: 线程间隔时间
         :return:
         """
-
-        user_list = database_tool().select_list_limit(table="user", start=user_start, count=user_count)
-        if user_list[0]:
-            user_ranklist_songs().get_user_ranklist_songs_thread(user_list=user_list[1], thread_count=50,
-                                                                 thread_inteval_time=0.1, rank_max=100)
-
-    def get_user_playlist_songs(self, user_start, user_count):
-        """
-        多线程获取用户歌单
-
-        :param user_start: 用户表位移
-        :param user_count: 用户表数目
-        :return:
-        """
-        user_list = database_tool().select_list_limit(table="user", start=user_start, count=user_count)
-        if user_list[0]:
-            playlist_songs().get_playlist_songs_by_user_list_thread(user_list=user_list[1], thread_count=10,
-                                                                    thread_inteval_time=5, default_songs_max=200,
-                                                                    created_songs_max=200,
-                                                                    created_playlists_max=5,
-                                                                    is_playlists_collected=False)
+        user_list = database_tool().select_list_limit(table="user", start=user_start, count=user_count)[1]
+        try:
+            success_count = 0
+            _user_ranklist_songs = user_ranklist_songs()
+            _playlist_songs = playlist_songs()
+            with ThreadPoolExecutor(thread_count) as executer:
+                future_list = []
+                for user in user_list:
+                    future_rank_all = executer.submit(_user_ranklist_songs.get_user_ranklist_songs,
+                                                      user[0], config.rank_type_all, config.all_rank_max)
+                    future_rank_week = executer.submit(_user_ranklist_songs.get_user_ranklist_songs,
+                                                       user[0], config.rank_type_week, config.week_rank_max)
+                    future_playlist = executer.submit(_playlist_songs.get_playlist_songs_by_user_id, user[0])
+                    future_list.append(future_rank_all)
+                    future_list.append(future_rank_week)
+                    future_list.append(future_playlist)
+                    time.sleep(thread_inteval_time)
+                for future in future_list:
+                    if future.result()[0]:
+                        success_count += 1
+            return True
+        except Exception as e:
+            logger.error("get_user_songs failed", "error_type:{},error:{}"
+                         .format(type(e), e))
 
 
 if __name__ == '__main__':
@@ -87,6 +98,5 @@ if __name__ == '__main__':
     # u.get_playlist_songs(376493212)
     # 评论过五万的歌曲歌单
     # u.get_playlist_songs(455717860)
-    # u.get_song_comments(song_start=0, song_count=100)
-    u.get_user_ranklists_songs(user_start=5200, user_count=6000)
-    # u.get_user_playlist_songs(user_start=100, user_count=200)
+    # u.get_song_comments(song_start=100, song_count=200)
+    u.get_user_songs(user_start=6000, user_count=7000)

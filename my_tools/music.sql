@@ -195,7 +195,7 @@ CREATE TABLE user_song
     score                int(4)   NOT NULL default 0,
     rank_all_score       int(3)   NOT NULL default 0,
     rank_week_score      int(3)   NOT NULL default 0,
-    playlist_like_pop    int(3)   NOT NULL default 0,
+    playlist_like_pop    int(3)   NOT NULL default 1,
     playlist_create_pop  int(3)   NOT NULL default 0,
     playlist_collect_pop int(3)   NOT NULL default 0,
     primary key (user_id, song_id),

@@ -17,6 +17,9 @@ import logging
 user_id = "474252223"
 user_name = "IsolationTom"
 
+# user_id = "292532569"
+# user_name = "淮木"
+
 # user_id = "281840834"
 # user_name = "手拉小"
 
@@ -120,7 +123,7 @@ created_songs_max = sys.maxsize
 is_playlists_collected = True
 
 # 用户收藏歌单的最大选取数
-collected_playlists_max = sys.maxsize
+collected_playlists_max = 5
 
 # 用户收藏歌单的歌曲最大选取数
 collected_songs_max = sys.maxsize
@@ -155,11 +158,11 @@ song_comments_type = song_source_default
 """
 
 # 排行榜 所有时间 score
-factor_rank_all_score = 6
+factor_rank_all_score = 4
 # 排行榜 最近一周 score
-factor_rank_week_score = 0.5
+factor_rank_week_score = 2.5
 # 喜欢的音乐歌单 pop
-factor_playlist_like_pop = 1
+factor_playlist_like_pop = 2
 # 创建的歌单 pop
 factor_playlist_create_pop = 1
 # 收藏的歌单 pop
