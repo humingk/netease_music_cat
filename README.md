@@ -1,10 +1,4 @@
-<a href=""><img src="https://img.shields.io/github/license/mashape/apistatus.svg" alt="license"></a>
-<a href=""><img src="https://img.shields.io/badge/language-python-green.svg" alt="language"></a>
-
----
-
-### **[施工] 代码重构中...**
-
+<div align="center"><a href=""><img src="https://img.shields.io/github/license/mashape/apistatus.svg" alt="license"></a><a href=""><img src="https://img.shields.io/badge/language-python-green.svg" alt="language"></a></div>
 ---
 
 ## 项目简介
@@ -95,3 +89,9 @@ mysql -uroot -p < music.sql
 
 
 待续...
+
+
+
+## 数据库关系模型
+
+![](./image/netease_sql.png)

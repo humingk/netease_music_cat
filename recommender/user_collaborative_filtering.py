@@ -44,9 +44,10 @@ class user_collaborative_filtering:
         """
         try:
             _database_tool = database_tool()
-            for offset in range(0, end, step):
+            user_song_count = 0
+            while (user_song_count < end):
                 user_song_list = _database_tool.execute(
-                    sql="select * from user_song where score=0 limit {} offset {}".format(step, offset),
+                    sql="select * from user_song where score=0 limit {}".format(step),
                     execute_type=1, return_type=2
                 )
                 if user_song_list[0] and len(user_song_list[1]) != 0:
@@ -63,7 +64,8 @@ class user_collaborative_filtering:
                         ])
                     _database_tool.insert_many_user_song_column(column="score", data_list=last_user_song_list)
                     _database_tool.commit()
-                    logger.debug("parse_user_song_score success", "offset:{}.step:{}".format(offset, step))
+                    user_song_count += step
+                    logger.debug("parse_user_song_score success", "limit:{}".format(step))
                 else:
                     break
         except Exception as e:
@@ -94,7 +96,7 @@ class user_collaborative_filtering:
         # 字典转化为pandas数据框
         data_frame = pandas.DataFrame(data=user_song_dict)
         # 设置评分标准
-        reader = Reader(rating_scale=(score_min, 1000))
+        reader = Reader(rating_scale=(0, 1000))
         # 从pandas数据框加载数据集
         return Dataset.load_from_df(df=data_frame[["user", "song", "score"]], reader=reader)
 
@@ -206,13 +208,14 @@ class user_collaborative_filtering:
             # 加载数据集
             data = self.get_user_song_score(score_min=score_min)
             # 测试数据集
-            self.test(algo=algoType, data=data)
+            # self.test(algo=algoType, data=data)
             # 训练模型
             algo = self.train(algo=algoType, data=data)
             # 保存路径
             file_name = os.path.expanduser("./score" + str(score_min) + ".dump")
             # 序列化
             dump.dump(file_name=file_name, algo=algo)
+            return algo
         except Exception as e:
             logger.error("serialize_algo fail", "error_type:{},error:{}".format(type(e), e))
 
@@ -230,12 +233,12 @@ class user_collaborative_filtering:
 
 if __name__ == '__main__':
     user_cf = user_collaborative_filtering()
-    user_cf.serialize_algo(algoType=KNNBasic())
+    # algo = user_cf.serialize_algo(algoType=KNNBasic())
     algo = user_cf.get_serialize_algo()
 
     user_id = config.user_id
     print("get neighbors...")
-    user_neighbors = user_cf.get_neighbors(algo=algo, user_id=user_id, k=10)
+    user_neighbors = user_cf.get_neighbors(algo=algo, user_id=user_id, k=2)
     print(user_neighbors)
 
     print("get neighbors's same songs...")
