@@ -3,16 +3,13 @@
 
 # author: humingk
 # ----------------------
-
-class user_report:
+class user_songs:
     """
-    用户听歌报告生成
-
-    用户听歌类型分布图
-
-
+    用户的音乐
 
     """
+    def get_user_songs_type(self,user_id):
+
 
 if __name__ == '__main__':
-    user_report()
+    user_songs()
