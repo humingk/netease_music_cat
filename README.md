@@ -57,6 +57,14 @@
 - weapi
 - eapi
 
+## 项目框架图
+
+![](./image/structure.png)
+
+## 数据库关系模型
+
+![](./image/netease_sql.png)
+
 ## 安装方式
 
 ```shell
@@ -127,9 +135,3 @@ config.py 为用户个性配置文件
 # 针对用户进行歌曲推荐(开发中)
 # 详见 recommender/user_collaborative_filtering.py
 ```
-
-
-
-## 数据库关系模型
-
-![](./image/netease_sql.png)
